@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const LoginForm = () => {
   const [formData, setFormData] = useState({
@@ -7,6 +8,7 @@ const LoginForm = () => {
     password: ""
   });
   const [error, setError] = useState("");
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData((prev) => ({
@@ -21,17 +23,24 @@ const LoginForm = () => {
 
     try {
       const res = await axios.post("http://localhost:5050/login", formData);
-      const token = res.data.token;
+      const { token, user } = res.data;
 
-      // Save token (optional)
+      // Save token and user info (optional)
       localStorage.setItem("token", token);
+      localStorage.setItem("user", JSON.stringify(user));
 
       alert("Login successful!");
-      // Redirect or load dashboard
-      // window.location.href = "/dashboard";
+
+      // Redirect based on role
+      if (user.role === "admin") {
+        navigate("/admin");
+      } else {
+        navigate("/student");
+      }
+
     } catch (err) {
       console.error(err);
-      setError(err.response?.data?.message || "Login failed");
+      setError(err.response?.data?.error || "Login failed");
     }
   };
 
@@ -43,7 +52,7 @@ const LoginForm = () => {
         type="email"
         name="school_email"
         placeholder="Email"
-        value={formData.email}
+        value={formData.school_email}
         onChange={handleChange}
         required
       />

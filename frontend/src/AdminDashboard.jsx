@@ -1,15 +1,19 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom"; // ✅ for redirect
 
 const AdminDashboard = () => {
   const [students, setStudents] = useState([]);
-  const [selectedImage, setSelectedImage] = useState(null); // 👈 For zoom
-  const [modalVisible, setModalVisible] = useState(false);  // 👈 Modal state
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [modalVisible, setModalVisible] = useState(false);
+  const navigate = useNavigate(); // ✅ Hook to redirect
 
   useEffect(() => {
     const fetchStudents = async () => {
       try {
-        const res = await axios.get("http://localhost:5050/admin/students");
+        const res = await axios.get("http://localhost:5050/admin/students", {
+          withCredentials: true, // ✅ in case session is required
+        });
         setStudents(res.data.filter((s) => s.status === "pending"));
       } catch (err) {
         console.error(err);
@@ -21,12 +25,25 @@ const AdminDashboard = () => {
 
   const updateStatus = async (id, status) => {
     try {
-      await axios.post(`http://localhost:5050/admin/students/${id}/status`, {
-        status,
-      });
+      await axios.post(
+        `http://localhost:5050/admin/students/${id}/status`,
+        { status },
+        { withCredentials: true }
+      );
       setStudents((prev) => prev.filter((s) => s.id !== id));
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  // ✅ LOGOUT handler
+  const handleLogout = async () => {
+    try {
+      await axios.post("http://localhost:5050/logout", {}, { withCredentials: true });
+      localStorage.removeItem("token");
+      navigate("/login");
+    } catch (err) {
+      console.error("Logout failed", err);
     }
   };
 
@@ -50,7 +67,13 @@ const AdminDashboard = () => {
 
   return (
     <div>
-      <h2>Pending Student Approvals</h2>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <h2>Pending Student Approvals</h2>
+        <button onClick={handleLogout} style={{ backgroundColor: "red", color: "white" }}>
+          Logout
+        </button>
+      </div>
+
       {students.length === 0 ? (
         <p>No pending requests</p>
       ) : (
@@ -131,7 +154,6 @@ const AdminDashboard = () => {
         </table>
       )}
 
-      {/* 👇 Modal for Zoomed Image */}
       {modalVisible && selectedImage && (
         <div
           onClick={closeModal}
