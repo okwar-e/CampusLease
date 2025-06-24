@@ -55,7 +55,7 @@ app.post("/register", upload.fields([
   }
 
     // 2. Check if email already exists in DB
-  const [existing] = await pool.query("SELECT id FROM students WHERE school_email = ?", [school_email]);
+  const [existing] = await pool.query("SELECT id FROM users WHERE school_email = ?", [school_email]);
   if (existing.length > 0) {
     return res.status(400).json({ error: "Email already registered." });
   }
@@ -106,7 +106,7 @@ app.get("/verify-email", async (req, res) => {
 
   try {
     await pool.query(`
-      INSERT INTO students (full_name, school_email, password_hash, selfie, id_card, status)
+      INSERT INTO users (full_name, school_email, password_hash, selfie, id_card, status)
       VALUES (?, ?, ?, ?, ?, 'pending')
     `, [data.full_name, data.school_email, data.password_hash, data.selfie, data.id_card]);
 
