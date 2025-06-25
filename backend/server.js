@@ -283,7 +283,6 @@ app.get("/items/available", async (req, res) => {
   res.json(items);
 });
 
-// POST /items (requires session & image upload)
 app.post("/items", upload.single("image"), async (req, res) => {
   if (!req.session.user) {
     return res.status(401).json({ error: "Unauthorized" });
@@ -292,13 +291,16 @@ app.post("/items", upload.single("image"), async (req, res) => {
   const { title, description, category, condition, price_per_day } = req.body;
   const image = req.file?.buffer;
 
+  console.log("Form Data:", req.body); // ✅ Debug form input
+  console.log("Uploaded File:", req.file); // ✅ Debug uploaded image
+
   if (!image) {
     return res.status(400).json({ error: "Image is required" });
   }
 
   try {
     await pool.query(
-      `INSERT INTO items (owner_id, title, description, category, condition, price_per_day, image)
+      `INSERT INTO items (owner_id, title, description, category, quality, price_per_day, image)
        VALUES (?, ?, ?, ?, ?, ?, ?)`,
       [
         req.session.user.id,
@@ -313,11 +315,74 @@ app.post("/items", upload.single("image"), async (req, res) => {
 
     res.status(201).json({ message: "Item listed successfully" });
   } catch (err) {
-    console.error("Error inserting item:", err);
+    console.error("Error inserting item:", err); // ✅ Log the actual error
     res.status(500).json({ error: "Failed to list item" });
   }
 });
 
+
+
+app.get("/student/leases", async (req, res) => {
+  if (!req.session.user || req.session.user.role !== 'student') {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+
+  try {
+    const [leases] = await pool.query(`
+      SELECT l.*, i.title AS item_title, i.price_per_day
+FROM leases l
+JOIN items i ON l.item_id = i.id
+WHERE l.renter_id = ?
+
+    `, [req.session.user.id]);
+
+    res.json(leases);
+  } catch (err) {
+    console.error("Error fetching leases:", err);
+    res.status(500).json({ error: "Failed to fetch leases" });
+  }
+});
+
+
+// 🧪 Session checker
+app.get("/me", (req, res) => {
+  if (req.session.user) {
+    res.json({ loggedIn: true, user: req.session.user });
+  } else {
+    res.status(401).json({ loggedIn: false, error: "No session" });
+  }
+});
+
+app.post("/leases", async (req, res) => {
+  const user = req.session.user;
+  if (!user) return res.status(401).json({ error: "Unauthorized" });
+
+  const { item_id, start_date, end_date, total_price } = req.body;
+
+  try {
+    const [itemRows] = await pool.query("SELECT owner_id, availability FROM items WHERE id = ?", [item_id]);
+    if (!itemRows.length || !itemRows[0].availability) {
+      return res.status(400).json({ error: "Item not available" });
+    }
+
+    if (itemRows[0].owner_id === user.id) {
+      return res.status(403).json({ error: "You cannot rent your own item" });
+    }
+
+    await pool.query(
+      `INSERT INTO leases (item_id, renter_id, start_date, end_date, total_price)
+       VALUES (?, ?, ?, ?, ?)`,
+      [item_id, user.id, start_date, end_date, total_price]
+    );
+
+    await pool.query("UPDATE items SET availability = 0 WHERE id = ?", [item_id]);
+
+    res.json({ message: "Lease created successfully" });
+  } catch (err) {
+    console.error("Lease creation error:", err); // 💥 Add this
+    res.status(500).json({ error: "Failed to lease item" }); // Keep this generic
+  }
+});
 
 
 // ✅ Start server

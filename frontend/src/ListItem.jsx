@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import axios from "axios";
 
-const ListItem = () => {
+const ListItem = ({ onSuccess }) => {
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -54,6 +54,10 @@ const ListItem = () => {
         price_per_day: "",
         image: null,
       });
+
+      if (typeof onSuccess === "function") {
+        onSuccess(); // ✅ hide form after successful listing
+      }
     } catch (err) {
       console.error(err);
       setError(err.response?.data?.error || "Failed to list item.");

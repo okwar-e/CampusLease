@@ -1,27 +1,75 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import ListItem from "./ListItem"; // 👈 Import the component to list new items
+import ListItem from "./ListItem";
 
 const Listings = () => {
   const [items, setItems] = useState([]);
   const [showForm, setShowForm] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [currentUserId, setCurrentUserId] = useState(null); // 👈 Needed to check ownership
 
   useEffect(() => {
     const fetchItems = async () => {
       try {
-        const res = await axios.get("http://localhost:5050/items/available");
+        const res = await axios.get("http://localhost:5050/items/available", {
+          withCredentials: true
+        });
         setItems(res.data);
       } catch (err) {
         console.error("Error fetching items:", err);
+        alert("Failed to load marketplace.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    const fetchCurrentUser = async () => {
+      try {
+        const res = await axios.get("http://localhost:5050/me", { withCredentials: true });
+        setCurrentUserId(res.data?.id);
+      } catch (err) {
+        console.warn("Couldn't fetch current user.");
       }
     };
 
     fetchItems();
+    fetchCurrentUser();
   }, []);
+
+  const handleRent = (item) => {
+    if (item.owner_id === currentUserId) {
+      return alert("You cannot lease your own item.");
+    }
+
+    const days = parseInt(prompt("For how many days do you want to rent this item?"), 10);
+    if (!days || isNaN(days) || days <= 0) return alert("Invalid number of days.");
+
+    const startDate = new Date();
+    const endDate = new Date();
+    endDate.setDate(startDate.getDate() + days);
+
+    const leaseData = {
+      item_id: item.id,
+      start_date: startDate.toISOString().split("T")[0],
+      end_date: endDate.toISOString().split("T")[0],
+      total_price: (item.price_per_day * days).toFixed(2)
+    };
+
+    axios.post("http://localhost:5050/leases", leaseData, { withCredentials: true })
+      .then(() => {
+        alert("Lease requested successfully!");
+        setItems((prev) => prev.filter((i) => i.id !== item.id)); // remove from list
+      })
+      .catch((err) => {
+        console.error("Lease error:", err.response?.data || err.message);
+        alert(err.response?.data?.error || "Failed to lease item.");
+      });
+  };
 
   return (
     <div>
       <h2>📦 Marketplace</h2>
+
       <button
         onClick={() => setShowForm(!showForm)}
         style={{ marginBottom: "15px", padding: "8px", cursor: "pointer" }}
@@ -31,35 +79,60 @@ const Listings = () => {
 
       {showForm && <ListItem onSuccess={() => setShowForm(false)} />}
 
-      <div style={{ display: "flex", flexWrap: "wrap", gap: "20px" }}>
-        {items.map((item) => (
-          <div
-            key={item.id}
-            style={{
-              border: "1px solid #ccc",
-              padding: "15px",
-              borderRadius: "10px",
-              width: "200px"
-            }}
-          >
-            <h4>{item.title}</h4>
-            <p>{item.category}</p>
-            <p>KES {item.price_per_day} /day</p>
-            {item.image && (
-              <img
-                src={`data:image/jpeg;base64,${btoa(
-                  new Uint8Array(item.image.data).reduce(
-                    (data, byte) => data + String.fromCharCode(byte),
-                    ""
-                  )
-                )}`}
-                alt="Item"
-                style={{ width: "100%", height: "120px", objectFit: "cover" }}
-              />
-            )}
-          </div>
-        ))}
-      </div>
+      {loading ? (
+        <p>Loading items...</p>
+      ) : (
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "20px" }}>
+          {items.length === 0 ? (
+            <p>No items available for leasing.</p>
+          ) : (
+            items.map((item) => (
+              <div
+                key={item.id}
+                style={{
+                  border: "1px solid #ccc",
+                  padding: "15px",
+                  borderRadius: "10px",
+                  width: "200px"
+                }}
+              >
+                <h4>{item.title}</h4>
+                <p>{item.category || "Uncategorized"}</p>
+                <p>KES {item.price_per_day} /day</p>
+                {item.image ? (
+                  <img
+                    src={`data:image/jpeg;base64,${btoa(
+                      new Uint8Array(item.image.data).reduce(
+                        (data, byte) => data + String.fromCharCode(byte),
+                        ""
+                      )
+                    )}`}
+                    alt="Item"
+                    style={{ width: "100%", height: "120px", objectFit: "cover" }}
+                  />
+                ) : (
+                  <p style={{ color: "#888" }}>No image</p>
+                )}
+
+                <button
+                  onClick={() => handleRent(item)}
+                  style={{
+                    marginTop: '10px',
+                    padding: '8px',
+                    backgroundColor: '#0066cc',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '5px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Rent Item
+                </button>
+              </div>
+            ))
+          )}
+        </div>
+      )}
     </div>
   );
 };

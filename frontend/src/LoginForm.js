@@ -25,7 +25,13 @@ const LoginForm = () => {
     setLoading(true);
 
     try {
-      const res = await axios.post("http://localhost:5050/login", formData);
+const res = await axios.post(
+  "http://localhost:5050/login",
+  formData,
+  {
+    withCredentials: true // ✅ VERY IMPORTANT
+  }
+);
       const { token, user } = res.data;
 
       if (!user || !user.role) {
