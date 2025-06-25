@@ -277,6 +277,47 @@ app.post("/logout", (req, res) => {
   });
 });
 
+// GET /items/available
+app.get("/items/available", async (req, res) => {
+  const [items] = await pool.query("SELECT * FROM items WHERE availability = 1");
+  res.json(items);
+});
+
+// POST /items (requires session & image upload)
+app.post("/items", upload.single("image"), async (req, res) => {
+  if (!req.session.user) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+
+  const { title, description, category, condition, price_per_day } = req.body;
+  const image = req.file?.buffer;
+
+  if (!image) {
+    return res.status(400).json({ error: "Image is required" });
+  }
+
+  try {
+    await pool.query(
+      `INSERT INTO items (owner_id, title, description, category, condition, price_per_day, image)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [
+        req.session.user.id,
+        title,
+        description,
+        category,
+        condition,
+        price_per_day,
+        image,
+      ]
+    );
+
+    res.status(201).json({ message: "Item listed successfully" });
+  } catch (err) {
+    console.error("Error inserting item:", err);
+    res.status(500).json({ error: "Failed to list item" });
+  }
+});
+
 
 
 // ✅ Start server

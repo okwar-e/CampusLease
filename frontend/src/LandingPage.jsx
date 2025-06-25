@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import './landing.css';
-import heroImage from './assets/uni2.jpeg'; // Ensure this path is correct
+import heroImage from './assets/uni3.jpg'; // Ensure this path is correct
 
 const LandingPage = () => {
   return (
@@ -23,7 +23,7 @@ const LandingPage = () => {
         style={{ backgroundImage: `url(${heroImage})` }}
       >
         <h1 className="hero-title">
-          Got Something Lying Around? Why Not Earn from It
+          Got Something Lying Around? Why Not Earn from It?
         </h1>
         <p className="hero-subtitle">
           CampusLease connects Strathmore University students, offering affordable access to essential items and a chance to earn from unused belongings. Join our community today!
