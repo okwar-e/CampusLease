@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import ListItem from "./ListItem";
 
@@ -6,7 +7,9 @@ const Listings = () => {
   const [items, setItems] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [currentUserId, setCurrentUserId] = useState(null); // 👈 Needed to check ownership
+  const [currentUserId, setCurrentUserId] = useState(null);
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchItems = async () => {
@@ -25,7 +28,9 @@ const Listings = () => {
 
     const fetchCurrentUser = async () => {
       try {
-        const res = await axios.get("http://localhost:5050/me", { withCredentials: true });
+        const res = await axios.get("http://localhost:5050/me", {
+          withCredentials: true
+        });
         setCurrentUserId(res.data?.id);
       } catch (err) {
         console.warn("Couldn't fetch current user.");
@@ -40,30 +45,7 @@ const Listings = () => {
     if (item.owner_id === currentUserId) {
       return alert("You cannot lease your own item.");
     }
-
-    const days = parseInt(prompt("For how many days do you want to rent this item?"), 10);
-    if (!days || isNaN(days) || days <= 0) return alert("Invalid number of days.");
-
-    const startDate = new Date();
-    const endDate = new Date();
-    endDate.setDate(startDate.getDate() + days);
-
-    const leaseData = {
-      item_id: item.id,
-      start_date: startDate.toISOString().split("T")[0],
-      end_date: endDate.toISOString().split("T")[0],
-      total_price: (item.price_per_day * days).toFixed(2)
-    };
-
-    axios.post("http://localhost:5050/leases", leaseData, { withCredentials: true })
-      .then(() => {
-        alert("Lease requested successfully!");
-        setItems((prev) => prev.filter((i) => i.id !== item.id)); // remove from list
-      })
-      .catch((err) => {
-        console.error("Lease error:", err.response?.data || err.message);
-        alert(err.response?.data?.error || "Failed to lease item.");
-      });
+    navigate(`/rent/${item.id}`);
   };
 
   return (
@@ -117,13 +99,13 @@ const Listings = () => {
                 <button
                   onClick={() => handleRent(item)}
                   style={{
-                    marginTop: '10px',
-                    padding: '8px',
-                    backgroundColor: '#0066cc',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '5px',
-                    cursor: 'pointer'
+                    marginTop: "10px",
+                    padding: "8px",
+                    backgroundColor: "#0066cc",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "5px",
+                    cursor: "pointer"
                   }}
                 >
                   Rent Item

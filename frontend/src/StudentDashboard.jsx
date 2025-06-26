@@ -8,6 +8,7 @@ import Leases from './Leases';
 import Payments from './Payments';
 import Profile from './Profile';
 import Requests from './Requests';
+import LentItems from './LentItems'; // ✅ Newly added
 
 function StudentDashboard() {
   const navigate = useNavigate();
@@ -27,6 +28,7 @@ function StudentDashboard() {
     switch (activeTab) {
       case 'listings': return <Listings />;
       case 'leases': return <Leases />;
+      case 'lent': return <LentItems />; // ✅ Render lent items
       case 'payments': return <Payments />;
       case 'profile': return <Profile />;
       case 'requests': return <Requests />;
@@ -41,6 +43,7 @@ function StudentDashboard() {
         <ul style={{ listStyle: 'none', padding: 0 }}>
           <li><button onClick={() => setActiveTab('listings')}>Marketplace</button></li>
           <li><button onClick={() => setActiveTab('leases')}>My Leases</button></li>
+          <li><button onClick={() => setActiveTab('lent')}>Lent Items</button></li> {/* ✅ */}
           <li><button onClick={() => setActiveTab('payments')}>Payments</button></li>
           <li><button onClick={() => setActiveTab('profile')}>Profile</button></li>
           <li><button onClick={() => setActiveTab('requests')}>Request Item</button></li>
