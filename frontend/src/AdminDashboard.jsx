@@ -1,14 +1,32 @@
-// AdminDashboard.jsx (Unified with Sidebar Navigation)
-import React, { useState } from "react";
+// AdminDashboard.jsx (Enhanced with Item Management)
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import ApproveStudents from './ApproveStudents';
 import AdminRegisterUser from "./AdminRegisterUser";
 import DeleteUserForm from "./DeleteUserForm";
-import "./AdminDashboards.css"; // Use the updated clean dashboard CSS
+import ManageItems from "./ManageItems"; // New component
+import AnalyticsPanel from "./AnalyticsPanel"; // New component
+import "./AdminDashboards.css";
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState("approve");
+  const [stats, setStats] = useState({});
   const navigate = useNavigate();
+
+  // Fetch dashboard stats on load
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const res = await fetch("http://localhost:5050/admin/stats", {
+          credentials: "include"
+        });
+        setStats(await res.json());
+      } catch (err) {
+        console.error("Failed to load stats", err);
+      }
+    };
+    fetchStats();
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -16,7 +34,6 @@ const AdminDashboard = () => {
         method: "POST",
         credentials: "include",
       });
-      localStorage.removeItem("token");
       navigate("/auth");
     } catch (err) {
       console.error("Logout failed", err);
@@ -31,6 +48,10 @@ const AdminDashboard = () => {
         return <AdminRegisterUser />;
       case "delete":
         return <DeleteUserForm />;
+      case "items": // New tab
+        return <ManageItems />;
+      case "analytics": // New tab
+        return <AnalyticsPanel stats={stats} />;
       default:
         return <ApproveStudents />;
     }
@@ -39,32 +60,53 @@ const AdminDashboard = () => {
   return (
     <div className="dashboard-container">
       <aside className="sidebar">
-        <h2>CampusLease Admin</h2>
-        <button
-          className={activeTab === "approve" ? "active" : ""}
-          onClick={() => setActiveTab("approve")}
-        >
-          📝 Approve/Reject
-        </button>
-        <button
-          className={activeTab === "register" ? "active" : ""}
-          onClick={() => setActiveTab("register")}
-        >
-          👤 Register New User
-        </button>
-        <button
-          className={activeTab === "delete" ? "active" : ""}
-          onClick={() => setActiveTab("delete")}
-        >
-          ❌ Delete User
-        </button>
+        <div className="sidebar-header">
+          <h2>CampusLease Admin</h2>
+      
+        </div>
+        
+        <nav>
+          <button className={activeTab === "approve" ? "active" : ""}
+            onClick={() => setActiveTab("approve")}>
+            📝 Student Approvals
+          </button>
+          <button className={activeTab === "items" ? "active" : ""}
+            onClick={() => setActiveTab("items")}>
+            🛠 Manage Items
+          </button>
+          <button className={activeTab === "register" ? "active" : ""}
+            onClick={() => setActiveTab("register")}>
+            👥 Register User
+          </button>
+          <button className={activeTab === "delete" ? "active" : ""}
+            onClick={() => setActiveTab("delete")}>
+            ❌ Delete User
+          </button>
+          <button className={activeTab === "analytics" ? "active" : ""}
+            onClick={() => setActiveTab("analytics")}>
+            📊 Analytics
+          </button>
+        </nav>
+
         <button className="logout" onClick={handleLogout}>
           ← Logout
         </button>
       </aside>
 
       <main className="main-content">
-        <h1>Dashboard</h1>
+        <header className="content-header">
+          <h1>
+            {activeTab === "approve" && "Student Approvals"}
+            {activeTab === "items" && "Item Management"}
+            {activeTab === "register" && "User Registration"}
+            {activeTab === "delete" && "User Removal"}
+            {activeTab === "analytics" && "System Analytics"}
+          </h1>
+          <div className="last-updated">
+            Updated: {new Date().toLocaleTimeString()}
+          </div>
+        </header>
+        
         {renderContent()}
       </main>
     </div>

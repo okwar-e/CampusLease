@@ -693,7 +693,6 @@ app.get("/student/payments", async (req, res) => {
 
 
 // Add this to your existing backend (likely in index.js or routes.js)
-
 // GET /student/profile - Get profile data for logged-in student
 app.get("/student/profile", async (req, res) => {
   if (!req.session.user) {
@@ -717,12 +716,14 @@ app.get("/student/profile", async (req, res) => {
     }
 
     const profile = rows[0];
-    
-    // Convert BLOB images to base64 if they exist
+
+    // Convert BLOBs to base64
     const formattedProfile = {
-      ...profile,
-      selfie: profile.selfie ? { data: profile.selfie } : null,
-      id_card: profile.id_card ? { data: profile.id_card } : null
+      full_name: profile.full_name,
+      school_email: profile.school_email,
+      status: profile.status,
+      selfie: profile.selfie ? profile.selfie.toString('base64') : null,
+      id_card: profile.id_card ? profile.id_card.toString('base64') : null,
     };
 
     res.status(200).json(formattedProfile);
@@ -734,57 +735,49 @@ app.get("/student/profile", async (req, res) => {
 
 
 
-
-
-// POST /requests - Create new item request
-app.post("/requests", async (req, res) => {
-  if (!req.session.user || req.session.user.role !== 'student') {
-    return res.status(403).json({ error: "Only students can make requests" });
-  }
-
-  const { item_name, description, category, desired_price, urgency } = req.body;
-
+// GET /admin/items
+app.get('/admin/items', async (req, res) => {
   try {
-    const [result] = await pool.query(
-      `INSERT INTO item_requests 
-       (student_id, item_name, description, category, desired_price, urgency)
-       VALUES (?, ?, ?, ?, ?, ?)`,
-      [req.session.user.id, item_name, description, category, desired_price, urgency]
-    );
+    const { filter } = req.query;
 
-    res.status(201).json({
-      message: "Request submitted successfully",
-      requestId: result.insertId
-    });
+    let query = 'SELECT * FROM items';
+    const params = [];
+
+    if (filter === 'recent') {
+      query += ' WHERE date_listed >= ? ORDER BY date_listed DESC';
+      const oneWeekAgo = new Date();
+      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+      params.push(oneWeekAgo);
+    } else {
+      query += ' ORDER BY date_listed DESC';
+    }
+
+    const [rows] = await pool.query(query, params);
+
+    const items = rows.map(row => ({
+      ...row,
+      image: row.image ? row.image.toString('base64') : null
+    }));
+
+    res.status(200).json(items);
   } catch (err) {
-    console.error("Request submission error:", err);
-    res.status(500).json({ error: "Failed to submit request" });
+    console.error('Error fetching items:', err);
+    res.status(500).json({ error: 'Failed to load items' });
+  }
+});
+// DELETE /admin/items/:id
+app.delete('/admin/items/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    await pool.query('DELETE FROM items WHERE id = ?', [id]);
+    res.status(200).json({ message: 'Item deleted successfully' });
+  } catch (err) {
+    console.error('Error deleting item:', err);
+    res.status(500).json({ error: 'Failed to delete item' });
   }
 });
 
-// GET /requests - Get all requests for current student
-app.get("/requests", async (req, res) => {
-  if (!req.session.user) {
-    return res.status(401).json({ error: "Unauthorized" });
-  }
 
-  try {
-    const [requests] = await pool.query(
-      `SELECT id, item_name, description, category, 
-              desired_price, urgency, status, 
-              DATE_FORMAT(created_at, '%Y-%m-%d') AS request_date
-       FROM item_requests
-       WHERE student_id = ?
-       ORDER BY created_at DESC`,
-      [req.session.user.id]
-    );
-
-    res.json(requests);
-  } catch (err) {
-    console.error("Error fetching requests:", err);
-    res.status(500).json({ error: "Failed to fetch requests" });
-  }
-});
 
 
 // ✅ Start server
