@@ -17,7 +17,7 @@ const Requests = () => {
   useEffect(() => {
     const fetchRequests = async () => {
       try {
-        const res = await axios.get("http://localhost:5050/requests", {
+        const res = await axios.get("http://localhost:5050/student/requests", {
           withCredentials: true
         });
         setRequests(res.data);
@@ -35,13 +35,13 @@ const Requests = () => {
     e.preventDefault();
     try {
       const res = await axios.post(
-        "http://localhost:5050/requests",
+        "http://localhost:5050/student/requests",
         formData,
         { withCredentials: true }
       );
       
       // Refresh requests list
-      const newRes = await axios.get("http://localhost:5050/requests", {
+      const newRes = await axios.get("http://localhost:5050/student/requests", {
         withCredentials: true
       });
       setRequests(newRes.data);
@@ -67,6 +67,22 @@ const Requests = () => {
       [e.target.name]: e.target.value
     });
   };
+
+  const handleDelete = async (id) => {
+  if (!window.confirm("Are you sure you want to delete this request?")) return;
+
+  try {
+    await axios.delete(`http://localhost:5050/student/requests/${id}`, {
+      withCredentials: true
+    });
+
+    // Refresh list after deletion
+    setRequests((prev) => prev.filter((r) => r.id !== id));
+  } catch (err) {
+    setError("Failed to delete request");
+  }
+};
+
 
   return (
     <div className="requests-container">
@@ -159,28 +175,37 @@ const Requests = () => {
               </tr>
             </thead>
             <tbody>
-              {requests.map((request) => (
-                <tr key={request.id}>
-                  <td>{request.item_name}</td>
-                  <td>{request.description}</td>
-                  <td>{request.category}</td>
-                  <td>{request.desired_price ? `KES ${request.desired_price}` : '-'}</td>
-                  <td style={{ 
-                    color: request.urgency === 'high' ? 'red' : 
-                          request.urgency === 'medium' ? 'orange' : 'green'
-                  }}>
-                    {request.urgency}
-                  </td>
-                  <td style={{
-                    color: request.status === 'approved' ? 'green' :
-                          request.status === 'rejected' ? 'red' : 'gray'
-                  }}>
-                    {request.status}
-                  </td>
-                  <td>{request.request_date}</td>
-                </tr>
-              ))}
-            </tbody>
+  {requests.map((request) => (
+    <tr key={request.id}>
+      <td>{request.item_name}</td>
+      <td>{request.description}</td>
+      <td>{request.category}</td>
+      <td>{request.desired_price ? `KES ${request.desired_price}` : '-'}</td>
+      <td style={{ 
+        color: request.urgency === 'high' ? 'red' : 
+              request.urgency === 'medium' ? 'orange' : 'green'
+      }}>
+        {request.urgency}
+      </td>
+      <td style={{
+        color: request.status === 'approved' ? 'green' :
+              request.status === 'rejected' ? 'red' : 'gray'
+      }}>
+        {request.status}
+      </td>
+      <td>{request.request_date}</td>
+      <td>
+        <button
+          style={{ color: 'red' }}
+          onClick={() => handleDelete(request.id)}
+        >
+          Delete
+        </button>
+      </td>
+    </tr>
+  ))}
+</tbody>
+
           </table>
         )}
       </div>

@@ -18,28 +18,23 @@ const LandingPage = () => {
         <div className="nav-links">
           <button 
             className="nav-link" 
-            onClick={() => handleNavigation('/about')}
+            onClick={() => handleNavigation('/')}
           >
             About
           </button>
           <button 
             className="nav-link" 
-            onClick={() => handleNavigation('/contact')}
+            onClick={() => handleNavigation('/')}
           >
             Contact
           </button>
           <button 
             className="login-btn"
-            onClick={() => handleNavigation('/login')}
+            onClick={() => handleNavigation('/Auth')}
           >
-            Login
+            signin
           </button>
-          <button 
-            className="register-btn"
-            onClick={() => handleNavigation('/register')}
-          >
-            Register
-          </button>
+          
         </div>
       </nav>
 
@@ -56,7 +51,7 @@ const LandingPage = () => {
           <p className="hero-subtitle">
             CampusLease connects Strathmore University students, offering affordable access to essential items and a chance to earn from unused belongings. Join our community today!
           </p>
-          <Link to="/items" className="hero-button-link">
+          <Link to="/Listings" className="hero-button-link">
             <button className="hero-button">Browse Items</button>
           </Link>
         </div>

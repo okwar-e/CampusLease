@@ -7,6 +7,7 @@ const RegisterForm = () => {
   const [formData, setFormData] = useState({
     full_name: '',
     school_email: '',
+    phone_number: '',        // ✅ Added
     password: '',
     confirmPassword: '',
     selfie: null,
@@ -35,6 +36,7 @@ const RegisterForm = () => {
     const payload = new FormData();
     payload.append('full_name', formData.full_name);
     payload.append('school_email', formData.school_email);
+    payload.append('phone_number', formData.phone_number); // ✅ Added
     payload.append('password', formData.password);
     payload.append('selfie', formData.selfie);
     payload.append('id_card', formData.id_card);
@@ -54,7 +56,6 @@ const RegisterForm = () => {
 
   return (
     <div className="register-container">
-     
       <form onSubmit={handleSubmit} encType="multipart/form-data" className="register-form">
         <h2>Student Registration</h2>
         {error && <p className="error">{error}</p>}
@@ -73,6 +74,15 @@ const RegisterForm = () => {
           name="school_email"
           placeholder="School Email"
           value={formData.school_email}
+          onChange={handleChange}
+          required
+        />
+
+        <input
+          type="tel"
+          name="phone_number"
+          placeholder="Phone Number"
+          value={formData.phone_number}
           onChange={handleChange}
           required
         />

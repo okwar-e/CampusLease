@@ -18,7 +18,7 @@ function StudentDashboard() {
     try {
       await axios.post("http://localhost:5050/logout", {}, { withCredentials: true });
       localStorage.removeItem("token");
-      navigate("/login");
+      navigate("/Auth");
     } catch (err) {
       console.error("Logout failed:", err);
     }

@@ -8,6 +8,8 @@ import AdminRegisterUser from './AdminRegisterUser';
 import DeleteUserForm from './DeleteUserForm';
 import StudentDashboard from './StudentDashboard';
 import RentItem from './RentItem'; // ✅ Add this line
+import ListingsPage from './Listings';
+
 
 function App() {
   return (
@@ -20,6 +22,8 @@ function App() {
         <Route path="/admin/delete-user" element={<DeleteUserForm />} />
         <Route path="/student" element={<StudentDashboard />} />
         <Route path="/rent/:id" element={<RentItem />} /> {/* ✅ Rent Item route */}
+        <Route path="/listings" element={<ListingsPage />} />
+
       </Routes>
     </Router>
   );

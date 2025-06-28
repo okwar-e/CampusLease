@@ -19,7 +19,7 @@
   position: relative;
   display: flex;
   width: 220px;
-  background: #e5e7eb; /* Light gray */
+  background: #e5e7eb;
   border-radius: 50px;
   overflow: hidden;
   font-weight: bold;
@@ -75,6 +75,7 @@
 }
 
 .register-form input[type="text"],
+.register-form input[type="tel"],
 .register-form input[type="email"],
 .register-form input[type="password"],
 .register-form input[type="file"] {

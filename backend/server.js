@@ -47,40 +47,35 @@ app.post("/register", upload.fields([
   { name: "selfie", maxCount: 1 },
   { name: "id_card", maxCount: 1 }
 ]), async (req, res) => {
-  const { full_name, school_email, password } = req.body;
+  const { full_name, school_email, password, phone_number } = req.body;
 
-  // 1. Only allow Strathmore emails
   if (!school_email.endsWith("@strathmore.edu")) {
     return res.status(400).json({ error: "Only @strathmore.edu emails allowed" });
   }
 
-    // 2. Check if email already exists in DB
   const [existing] = await pool.query("SELECT id FROM users WHERE school_email = ?", [school_email]);
   if (existing.length > 0) {
     return res.status(400).json({ error: "Email already registered." });
   }
 
-
-   // 3. Store in pendingVerifications
   const token = crypto.randomBytes(32).toString("hex");
   const password_hash = await bcrypt.hash(password, 10);
 
   pendingVerifications[token] = {
     full_name,
     school_email,
+    phone_number,
     password_hash,
     selfie: req.files["selfie"]?.[0]?.buffer,
     id_card: req.files["id_card"]?.[0]?.buffer
   };
 
-
-  // 4. Send Email
   const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
-    user: "collins.okware@strathmore.edu", // Sender email
-    pass: "dsju bliy jwbd yzyn"     // App password (NOT your Gmail password)
-  }
+      user: "collins.okware@strathmore.edu",
+      pass: "dsju bliy jwbd yzyn" // Your app-specific password
+    }
   });
 
   const link = `http://localhost:5050/verify-email?token=${token}`;
@@ -106,9 +101,16 @@ app.get("/verify-email", async (req, res) => {
 
   try {
     await pool.query(`
-      INSERT INTO users (full_name, school_email, password_hash, selfie, id_card, status)
-      VALUES (?, ?, ?, ?, ?, 'pending')
-    `, [data.full_name, data.school_email, data.password_hash, data.selfie, data.id_card]);
+      INSERT INTO users (full_name, school_email, phone_number, password_hash, selfie, id_card, status)
+      VALUES (?, ?, ?, ?, ?, ?, 'pending')
+    `, [
+      data.full_name,
+      data.school_email,
+      data.phone_number,
+      data.password_hash,
+      data.selfie,
+      data.id_card
+    ]);
 
     delete pendingVerifications[token];
     res.send("Email verified. Your account is pending approval.");
@@ -117,6 +119,7 @@ app.get("/verify-email", async (req, res) => {
     res.status(500).send("Error saving verified user.");
   }
 });
+
 
 
 // ✅ Login Route with Session Support
@@ -778,6 +781,106 @@ app.delete('/admin/items/:id', async (req, res) => {
 });
 
 
+// --- ITEM REQUEST ROUTES ---
+
+app.post("/student/requests", async (req, res) => {
+ if (!req.session.user) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+    const user = req.session.user;
+
+
+  const { item_name, description, category, desired_price, urgency } = req.body;
+
+  try {
+    await pool.query(
+      `INSERT INTO item_requests 
+        (student_id, item_name, description, category, desired_price, urgency) 
+        VALUES (?, ?, ?, ?, ?, ?)`,
+      [user.id, item_name, description, category, desired_price, urgency]
+    );
+
+    res.status(201).json({ message: "Request submitted successfully" });
+  } catch (err) {
+    console.error("Request Insert Error:", err);
+    res.status(500).json({ error: "Failed to submit request" });
+  }
+});
+app.get("/student/requests", async (req, res) => {
+  const user = req.session.user;
+
+  // 🔒 Check if user is logged in and is a student
+  if (!user || user.role !== 'student') {
+    return res.status(401).json({ error: "Unauthorized access" });
+  }
+
+  try {
+    const [rows] = await pool.query(
+      `SELECT id, item_name AS title, description, category, desired_price, urgency, created_at 
+       FROM item_requests 
+       WHERE student_id = ? 
+       ORDER BY created_at DESC`,
+      [user.id]
+    );
+
+    res.json(rows);
+  } catch (err) {
+    console.error("Request Fetch Error:", err);
+    res.status(500).json({ error: "Failed to fetch requests" });
+  }
+});
+
+
+
+app.delete("/student/requests/:id", async (req, res) => {
+  const user = req.session.user;
+  if (!user || user.role !== 'student') {
+    return res.status(403).json({ error: "Unauthorized" });
+  }
+
+  const requestId = req.params.id;
+
+  try {
+    const [result] = await pool.query(
+      "DELETE FROM item_requests WHERE id = ? AND student_id = ?",
+      [requestId, user.id]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: "Request not found or not yours" });
+    }
+
+    res.json({ message: "Request deleted successfully" });
+  } catch (err) {
+    console.error("Delete error:", err);
+    res.status(500).json({ error: "Failed to delete request" });
+  }
+});
+
+app.put("/student/profile", upload.fields([
+  { name: 'selfie' },
+  { name: 'id_card' }
+]), async (req, res) => {
+  const user = req.session.user;
+  if (!user || user.role !== 'student') {
+    return res.status(403).json({ error: "Unauthorized" });
+  }
+
+  const { full_name, phone } = req.body;
+
+
+  try {
+    await pool.query(
+      `UPDATE users SET full_name = ?, phone_number = ?
+       WHERE id = ?`,
+      [full_name, phone, user.id]
+    );
+    res.json({ message: "Profile updated" });
+  } catch (err) {
+    console.error("Update error:", err);
+    res.status(500).json({ error: "Failed to update profile" });
+  }
+});
 
 
 // ✅ Start server
