@@ -41,7 +41,6 @@ const res = await axios.post(
       if (token) localStorage.setItem("token", token);
       localStorage.setItem("user", JSON.stringify(user));
 
-      alert("Login successful!");
 
       if (user.role === "admin") {
         navigate("/admin");

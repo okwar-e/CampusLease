@@ -47,7 +47,6 @@ const RegisterForm = () => {
         withCredentials: true,
       });
 
-      alert(res.data.message || "Registration successful!");
     } catch (err) {
       console.error(err);
       setError(err.response?.data?.error || "Something went wrong");

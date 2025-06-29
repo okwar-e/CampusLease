@@ -1,11 +1,12 @@
-// AdminDashboard.jsx (Enhanced with Item Management)
+// AdminDashboard.jsx
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import ApproveStudents from './ApproveStudents';
 import AdminRegisterUser from "./AdminRegisterUser";
 import DeleteUserForm from "./DeleteUserForm";
-import ManageItems from "./ManageItems"; // New component
-import AnalyticsPanel from "./AnalyticsPanel"; // New component
+import ManageItems from "./ManageItems";
+import AnalyticsPanel from "./AnalyticsPanel";
+import AdminRequests from "./AdminRequests"; // <-- NEW
 import "./AdminDashboards.css";
 
 const AdminDashboard = () => {
@@ -13,7 +14,6 @@ const AdminDashboard = () => {
   const [stats, setStats] = useState({});
   const navigate = useNavigate();
 
-  // Fetch dashboard stats on load
   useEffect(() => {
     const fetchStats = async () => {
       try {
@@ -48,10 +48,12 @@ const AdminDashboard = () => {
         return <AdminRegisterUser />;
       case "delete":
         return <DeleteUserForm />;
-      case "items": // New tab
+      case "items":
         return <ManageItems />;
-      case "analytics": // New tab
+      case "analytics":
         return <AnalyticsPanel stats={stats} />;
+      case "requests":
+        return <AdminRequests/>; // <-- NEW
       default:
         return <ApproveStudents />;
     }
@@ -62,13 +64,16 @@ const AdminDashboard = () => {
       <aside className="sidebar">
         <div className="sidebar-header">
           <h2>CampusLease Admin</h2>
-      
         </div>
         
         <nav>
           <button className={activeTab === "approve" ? "active" : ""}
             onClick={() => setActiveTab("approve")}>
             📝 Student Approvals
+          </button>
+          <button className={activeTab === "requests" ? "active" : ""}
+            onClick={() => setActiveTab("requests")}>
+            📬 Manage Requests
           </button>
           <button className={activeTab === "items" ? "active" : ""}
             onClick={() => setActiveTab("items")}>
@@ -97,6 +102,7 @@ const AdminDashboard = () => {
         <header className="content-header">
           <h1>
             {activeTab === "approve" && "Student Approvals"}
+            {activeTab === "requests" && "Manage Item Requests"}
             {activeTab === "items" && "Item Management"}
             {activeTab === "register" && "User Registration"}
             {activeTab === "delete" && "User Removal"}

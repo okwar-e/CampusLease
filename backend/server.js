@@ -380,36 +380,6 @@ app.get("/me", (req, res) => {
   }
 });
 
-/*app.post("/leases", async (req, res) => {
-  const user = req.session.user;
-  if (!user) return res.status(401).json({ error: "Unauthorized" });
-
-  const { item_id, start_date, end_date, total_price } = req.body;
-
-  try {
-    const [itemRows] = await pool.query("SELECT owner_id, availability FROM items WHERE id = ?", [item_id]);
-    if (!itemRows.length || !itemRows[0].availability) {
-      return res.status(400).json({ error: "Item not available" });
-    }
-
-    if (itemRows[0].owner_id === user.id) {
-      return res.status(403).json({ error: "You cannot rent your own item" });
-    }
-
-    await pool.query(
-      `INSERT INTO leases (item_id, renter_id, start_date, end_date, total_price)
-       VALUES (?, ?, ?, ?, ?)`,
-      [item_id, user.id, start_date, end_date, total_price]
-    );
-
-    await pool.query("UPDATE items SET availability = 0 WHERE id = ?", [item_id]);
-
-    res.json({ message: "Lease created successfully" });
-  } catch (err) {
-    console.error("Lease creation error:", err); // 💥 Add this
-    res.status(500).json({ error: "Failed to lease item" }); // Keep this generic
-  }
-});*/ 
 
 // Updated Get one item by id
 app.get("/items/:id", async (req, res) => {
@@ -522,10 +492,10 @@ app.post("/pay/lease", express.json(), async (req, res) => {
     );
 
     // 5. Mark item as temporarily reserved
-    await conn.query(
-      "UPDATE items SET availability = 0 WHERE id = ?",
-      [item_id]
-    );
+   // await conn.query(
+     // "UPDATE items SET availability = 0 WHERE id = ?",
+      //[item_id]
+    //);
 
     await conn.commit();
     
@@ -879,6 +849,98 @@ app.put("/student/profile", upload.fields([
   } catch (err) {
     console.error("Update error:", err);
     res.status(500).json({ error: "Failed to update profile" });
+  }
+});
+
+// ✅ Get all requests (admin only)
+app.get('/admin/requests', async (req, res) => {
+  const user = req.session.user;
+  if (!user || user.role !== 'admin') {
+    return res.status(403).json({ error: "Unauthorized" });
+  }
+
+  try {
+    const [rows] = await pool.query(`
+      SELECT 
+        ir.*, 
+        u.full_name AS student_name, 
+        u.school_email AS student_email
+      FROM item_requests ir
+      JOIN users u ON ir.student_id = u.id
+      ORDER BY ir.created_at DESC
+    `);
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error while fetching requests' });
+  }
+});
+
+
+// ✅ Delete a request by ID (admin only)
+app.delete('/admin/requests/:id', async (req, res) => {
+  const user = req.session.user;
+  if (!user || user.role !== 'admin') {
+    return res.status(403).json({ error: "Unauthorized" });
+  }
+
+  const requestId = req.params.id;
+
+  try {
+    await db.query(`DELETE FROM item_requests WHERE id = ?`, [requestId]);
+    res.json({ message: 'Request deleted' });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to delete request' });
+  }
+});
+
+app.get('/admin/stats', async (req, res) => {
+  const user = req.session.user;
+  if (!user || user.role !== 'admin') {
+    return res.status(403).json({ error: 'Unauthorized' });
+  }
+
+  try {
+    // Pending students
+    const [[{ pendingUsers }]] = await pool.query(`SELECT COUNT(*) AS pendingUsers FROM users WHERE status = 'pending'`);
+
+    // Total items
+    const [[{ totalItems }]] = await pool.query(`SELECT COUNT(*) AS totalItems FROM items`);
+
+    // Total revenue
+    const [[{ totalRevenue }]] = await pool.query(`SELECT SUM(amount) AS totalRevenue FROM payments WHERE status = 'SUCCESS'`);
+
+    // Weekly revenue (last 7 days)
+    const [[{ weeklyRevenue }]] = await pool.query(`
+      SELECT SUM(amount) AS weeklyRevenue 
+      FROM payments 
+      WHERE status = 'SUCCESS' 
+        AND transaction_time >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+    `);
+
+    // Daily revenue for the graph (last 7 days)
+    const [dailyRevenue] = await pool.query(`
+      SELECT 
+        DATE(transaction_time) AS date, 
+        SUM(amount) AS amount 
+      FROM payments 
+      WHERE status = 'SUCCESS' 
+        AND transaction_time >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+      GROUP BY DATE(transaction_time)
+      ORDER BY DATE(transaction_time)
+    `);
+
+    res.json({
+      pendingUsers,
+      totalItems,
+      totalRevenue,
+      weeklyRevenue,
+      dailyRevenue
+    });
+
+  } catch (err) {
+    console.error('Analytics error:', err);
+    res.status(500).json({ error: 'Failed to fetch analytics' });
   }
 });
 
