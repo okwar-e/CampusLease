@@ -1,40 +1,135 @@
+/* Listings.css */
+
 .listings-container {
-  padding: 20px;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 40px 20px;
+  font-family: Arial, sans-serif;
+  background-color: #f9f9f9;
+}
+
+.listings-heading {
+  text-align: center;
+  font-size: 2rem;
+  font-weight: bold;
+  margin-bottom: 2rem;
+}
+
+.view-toggle {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.view-toggle button {
+  padding: 10px 20px;
+  background-color: #e5e7eb;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.3s ease;
+}
+
+.view-toggle button.active,
+.view-toggle button:hover {
+  background-color: #007bff;
+  color: white;
+}
+
+.list-new-btn {
+  display: block;
+  margin: 0 auto 30px auto;
+  padding: 10px 20px;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.list-new-btn:hover {
+  background-color: #218838;
 }
 
 .listings-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: 25px;
-  margin-top: 20px;
 }
 
 .item-card {
   background: #fff;
   border: 1px solid #ddd;
-  border-radius: 10px;
-  padding: 15px;
+  border-radius: 12px;
+  padding: 16px;
+  width: 240px;
   text-align: center;
-  box-shadow: 0 0 8px rgba(0, 0, 0, 0.03);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s ease;
+}
+
+.item-card:hover {
+  transform: translateY(-5px);
 }
 
 .item-image {
   width: 100%;
-  height: 180px;
+  height: 160px;
   object-fit: cover;
-  border-radius: 5px;
+  border-radius: 6px;
+  margin-bottom: 10px;
 }
 
 .lease-btn {
   margin-top: 10px;
   padding: 10px;
-  background-color: #003366;
+  background-color: #007bff;
   color: #fff;
   border: none;
   border-radius: 6px;
   cursor: pointer;
+  width: 100%;
+  font-weight: 600;
+  transition: background-color 0.2s ease;
 }
 
 .lease-btn:hover {
-  background-color: #002244;
+  background-color: #0056b3;
+}
+
+.requests-heading {
+  margin-top: 30px;
+  font-size: 1.5rem;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.requests-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+}
+
+.requests-table th,
+.requests-table td {
+  padding: 12px 15px;
+  border-bottom: 1px solid #eee;
+  text-align: left;
+}
+
+.requests-table th {
+  background-color: #f0f0f0;
+  font-weight: 600;
+}
+
+.requests-table tr:hover {
+  background-color: #f9f9f9;
 }

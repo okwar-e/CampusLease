@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import './ApproveStudents.css';
 
 const ApproveStudents = () => {
   const [students, setStudents] = useState([]);
@@ -44,22 +45,16 @@ const ApproveStudents = () => {
     setSelectedImage(null);
   };
 
-  const imageStyle = {
-    width: "100px",
-    height: "100px",
-    objectFit: "cover",
-    cursor: "pointer",
-    border: "1px solid #ccc",
-  };
+  const imageStyle = "thumbnail-img";
 
   return (
-    <div>
+    <div className="approve-students-container">
       <h2>Pending Student Approvals</h2>
 
       {students.length === 0 ? (
         <p>No pending requests</p>
       ) : (
-        <table border="1" cellPadding="10">
+        <table className="students-table">
           <thead>
             <tr>
               <th>Full Name</th>
@@ -77,6 +72,7 @@ const ApproveStudents = () => {
                 <td>
                   {student.selfie && (
                     <img
+                      className={imageStyle}
                       src={`data:image/jpeg;base64,${btoa(
                         new Uint8Array(student.selfie.data).reduce(
                           (data, byte) => data + String.fromCharCode(byte),
@@ -84,7 +80,6 @@ const ApproveStudents = () => {
                         )
                       )}`}
                       alt="Selfie"
-                      style={imageStyle}
                       onClick={() =>
                         handleImageClick(
                           `data:image/jpeg;base64,${btoa(
@@ -101,6 +96,7 @@ const ApproveStudents = () => {
                 <td>
                   {student.id_card && (
                     <img
+                      className={imageStyle}
                       src={`data:image/jpeg;base64,${btoa(
                         new Uint8Array(student.id_card.data).reduce(
                           (data, byte) => data + String.fromCharCode(byte),
@@ -108,7 +104,6 @@ const ApproveStudents = () => {
                         )
                       )}`}
                       alt="ID Card"
-                      style={imageStyle}
                       onClick={() =>
                         handleImageClick(
                           `data:image/jpeg;base64,${btoa(
@@ -122,13 +117,9 @@ const ApproveStudents = () => {
                     />
                   )}
                 </td>
-                <td>
-                  <button onClick={() => updateStatus(student.id, "approved")}>
-                    Approve
-                  </button>
-                  <button onClick={() => updateStatus(student.id, "rejected")}>
-                    Reject
-                  </button>
+                <td className="action-buttons">
+                  <button onClick={() => updateStatus(student.id, "approved")}>Approve</button>
+                  <button onClick={() => updateStatus(student.id, "rejected")}>Reject</button>
                 </td>
               </tr>
             ))}
@@ -137,31 +128,8 @@ const ApproveStudents = () => {
       )}
 
       {modalVisible && selectedImage && (
-        <div
-          onClick={closeModal}
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            width: "100vw",
-            height: "100vh",
-            backgroundColor: "rgba(0,0,0,0.8)",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            zIndex: 999,
-          }}
-        >
-          <img
-            src={selectedImage}
-            alt="Zoomed"
-            style={{
-              maxWidth: "90%",
-              maxHeight: "90%",
-              borderRadius: "10px",
-              boxShadow: "0 0 15px white",
-            }}
-          />
+        <div className="modal-overlay" onClick={closeModal}>
+          <img src={selectedImage} alt="Zoomed" />
         </div>
       )}
     </div>

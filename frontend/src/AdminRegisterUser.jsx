@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import './AdminRegisterUser.css';
 
 function AdminRegisterUser() {
   const [form, setForm] = useState({
@@ -24,17 +25,48 @@ function AdminRegisterUser() {
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <h3>Register New User</h3>
-      <input name="full_name" placeholder="Full Name" value={form.full_name} onChange={handleChange} required />
-      <input name="school_email" placeholder="Email" type="email" value={form.school_email} onChange={handleChange} required />
-      <input name="password" placeholder="Password" type="password" value={form.password} onChange={handleChange} required />
-      <select name="role" value={form.role} onChange={handleChange}>
-        <option value="student">Student</option>
-        <option value="admin">Admin</option>
-      </select>
-      <button type="submit">Register</button>
-    </form>
+    <div className="admin-register-container">
+      <form onSubmit={handleSubmit} className="admin-register-form">
+        <h3>Register New User</h3>
+
+        <label>Full Name</label>
+        <input
+          name="full_name"
+          placeholder="Full Name"
+          value={form.full_name}
+          onChange={handleChange}
+          required
+        />
+
+        <label>Email</label>
+        <input
+          name="school_email"
+          type="email"
+          placeholder="Email"
+          value={form.school_email}
+          onChange={handleChange}
+          required
+        />
+
+        <label>Password</label>
+        <input
+          name="password"
+          type="password"
+          placeholder="Password"
+          value={form.password}
+          onChange={handleChange}
+          required
+        />
+
+        <label>Role</label>
+        <select name="role" value={form.role} onChange={handleChange}>
+          <option value="student">Student</option>
+          <option value="admin">Admin</option>
+        </select>
+
+        <button type="submit">Register</button>
+      </form>
+    </div>
   );
 }
 

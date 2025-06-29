@@ -1,6 +1,8 @@
 // AdminRequests.jsx
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import './AdminRequests.css';
+
 
 const AdminRequests = () => {
   const [requests, setRequests] = useState([]);

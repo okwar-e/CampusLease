@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import "./LoginForm.css";
 
 const LoginForm = () => {
@@ -8,6 +8,7 @@ const LoginForm = () => {
     school_email: "",
     password: ""
   });
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -19,35 +20,27 @@ const LoginForm = () => {
     }));
   };
 
+  const togglePasswordVisibility = () => {
+    setShowPassword(prev => !prev);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     setLoading(true);
 
     try {
-const res = await axios.post(
-  "http://localhost:5050/login",
-  formData,
-  {
-    withCredentials: true // ✅ VERY IMPORTANT
-  }
-);
-      const { token, user } = res.data;
+      const res = await axios.post("http://localhost:5050/login", formData, {
+        withCredentials: true
+      });
 
-      if (!user || !user.role) {
-        throw new Error("User role missing in response");
-      }
+      const { token, user } = res.data;
+      if (!user || !user.role) throw new Error("User role missing in response");
 
       if (token) localStorage.setItem("token", token);
       localStorage.setItem("user", JSON.stringify(user));
 
-
-      if (user.role === "admin") {
-        navigate("/admin");
-      } else {
-        navigate("/student");
-      }
-
+      navigate(user.role === "admin" ? "/admin" : "/student");
     } catch (err) {
       console.error(err);
       setError(err.response?.data?.error || "Login failed");
@@ -57,34 +50,75 @@ const res = await axios.post(
   };
 
   return (
-    <div className="login-container">
- 
-      <form onSubmit={handleSubmit} className="login-form">
-        <h2>Login</h2>
-        {error && <p className="error">{error}</p>}
+    <div className="page-container">
+      <nav className="navbar">
+        <div className="nav-left">
+          <h1 className="logo">🎓 CampusLease</h1>
+        </div>
+        <div className="nav-right">
+          <a href="./" className="nav-link">Home</a>
+          <a href="#" className="btn login-btn">Login</a>
+          <a href="./register" className="btn register-btn">Register</a>
+        </div>
+      </nav>
 
-        <input
-          type="email"
-          name="school_email"
-          placeholder="Email"
-          value={formData.school_email}
-          onChange={handleChange}
-          required
-        />
+      <div className="login-page-body">
+        <div className="login-container">
+          <form onSubmit={handleSubmit} className="login-form">
+            <h2>Welcome back</h2>
+            {error && <p className="error">{error}</p>}
 
-        <input
-          type="password"
-          name="password"
-          placeholder="Password"
-          value={formData.password}
-          onChange={handleChange}
-          required
-        />
+            <div className="input-group">
+              <label>Email</label>
+              <input
+                type="email"
+                name="school_email"
+                placeholder="Enter your email"
+                value={formData.school_email}
+                onChange={handleChange}
+                required
+              />
+            </div>
 
-        <button type="submit" disabled={loading}>
-          {loading ? "Logging in..." : "Login"}
-        </button>
-      </form>
+            <div className="input-group">
+              <label>Password</label>
+              <div className="password-wrapper">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  name="password"
+                  placeholder="Enter your password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  required
+                />
+                <span
+                  className="toggle-icon"
+                  onClick={togglePasswordVisibility}
+                  title={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? "🙈" : "👁️"}
+                </span>
+              </div>
+            </div>
+
+            <div className="options">
+              <div className="remember-me">
+                <input type="checkbox" id="remember" />
+                <label htmlFor="remember">Remember me</label>
+              </div>
+              <a href="#" className="forgot-password">Forgot Password?</a>
+            </div>
+
+            <button type="submit" disabled={loading}>
+              {loading ? "Logging in..." : "Login"}
+            </button>
+
+            <div className="register-link">
+              Don't have an account? <a href="#">Register</a>
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
   );
 };

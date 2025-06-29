@@ -34,7 +34,7 @@ const AdminDashboard = () => {
         method: "POST",
         credentials: "include",
       });
-      navigate("/auth");
+      navigate("/login");
     } catch (err) {
       console.error("Logout failed", err);
     }
@@ -101,12 +101,12 @@ const AdminDashboard = () => {
       <main className="main-content">
         <header className="content-header">
           <h1>
-            {activeTab === "approve" && "Student Approvals"}
-            {activeTab === "requests" && "Manage Item Requests"}
-            {activeTab === "items" && "Item Management"}
-            {activeTab === "register" && "User Registration"}
-            {activeTab === "delete" && "User Removal"}
-            {activeTab === "analytics" && "System Analytics"}
+            {activeTab === "approve" && ""}
+            {activeTab === "requests" && ""}
+            {activeTab === "items" && ""}
+            {activeTab === "register" && ""}
+            {activeTab === "delete" && ""}
+            {activeTab === "analytics" && ""}
           </h1>
           <div className="last-updated">
             Updated: {new Date().toLocaleTimeString()}

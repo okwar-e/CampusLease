@@ -1,31 +1,54 @@
 .manage-items-container {
-  padding: 20px;
+  padding: 30px;
   max-width: 1200px;
   margin: 0 auto;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
 }
 
 .controls {
   display: flex;
+  flex-wrap: wrap;
   gap: 15px;
-  margin-bottom: 20px;
+  margin-bottom: 25px;
 }
 
-.search-input, .filter-select {
-  padding: 8px 12px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
+.search-input,
+.filter-select {
+  padding: 10px 14px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
   font-size: 1rem;
+  min-width: 200px;
+  transition: border-color 0.3s ease;
+}
+
+.search-input:focus,
+.filter-select:focus {
+  border-color: #007bff;
+  outline: none;
 }
 
 .items-table {
   width: 100%;
   border-collapse: collapse;
+  background-color: #fefefe;
+  border-radius: 8px;
+  overflow: hidden;
 }
 
-.items-table th, .items-table td {
-  padding: 12px;
+.items-table th,
+.items-table td {
+  padding: 14px 16px;
   text-align: left;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.items-table th {
+  background-color: #f7f9fc;
+  font-weight: 600;
+  color: #333;
 }
 
 .item-info {
@@ -38,32 +61,37 @@
   width: 50px;
   height: 50px;
   object-fit: cover;
-  border-radius: 4px;
+  border-radius: 6px;
+  border: 1px solid #ddd;
 }
 
 .status {
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 0.9rem;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-transform: capitalize;
 }
 
 .status.active {
-  background-color: #e8f5e9;
+  background-color: #e6f4ea;
   color: #2e7d32;
 }
 
 .status.reported {
-  background-color: #ffebee;
-  color: #c62828;
+  background-color: #fdecea;
+  color: #d32f2f;
 }
 
 .remove-btn {
-  background-color: #ffebee;
-  color: #c62828;
+  background-color: #ffe6e6;
+  color: #d32f2f;
   border: none;
-  padding: 6px 12px;
-  border-radius: 4px;
+  padding: 8px 14px;
+  border-radius: 6px;
   cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
 }
 
 .remove-btn:hover {
@@ -74,41 +102,48 @@
   position: absolute;
   top: 50%;
   left: 50%;
-  right: auto;
-  bottom: auto;
   transform: translate(-50%, -50%);
   background: white;
-  padding: 20px;
-  border-radius: 8px;
+  padding: 25px;
+  border-radius: 10px;
   max-width: 500px;
   width: 90%;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.2);
+  z-index: 1001;
 }
 
 .modal-overlay {
   background-color: rgba(0, 0, 0, 0.5);
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
 }
 
 .modal-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 10px;
+  gap: 12px;
   margin-top: 20px;
 }
 
-.cancel-btn, .confirm-btn {
-  padding: 8px 16px;
+.cancel-btn,
+.confirm-btn {
+  padding: 10px 18px;
   border: none;
-  border-radius: 4px;
+  border-radius: 6px;
+  font-weight: bold;
   cursor: pointer;
+  font-size: 0.95rem;
 }
 
 .cancel-btn {
   background-color: #e0e0e0;
+  color: #333;
 }
 
 .confirm-btn {
   background-color: #f44336;
-  color: white;
+  color: #fff;
 }
 
 .confirm-btn:disabled {
@@ -116,12 +151,16 @@
   cursor: not-allowed;
 }
 
-.loading, .no-items, .error {
+.loading,
+.no-items,
+.error {
   text-align: center;
   padding: 20px;
-  font-size: 1.2rem;
+  font-size: 1.1rem;
+  color: #666;
 }
 
 .error {
-  color: #c62828;
+  color: #d32f2f;
+  font-weight: 500;
 }

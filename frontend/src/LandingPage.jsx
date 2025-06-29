@@ -30,7 +30,7 @@ const LandingPage = () => {
           </button>
           <button 
             className="login-btn"
-            onClick={() => handleNavigation('/Auth')}
+            onClick={() => handleNavigation('/login')}
           >
             signin
           </button>

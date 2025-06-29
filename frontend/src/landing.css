@@ -33,11 +33,10 @@
 }
 
 .login-btn {
-  background-color: #3b82f6;
+
   color: #fff;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 20px;
+  background-color: white;
+    padding: 8px 16px;
   cursor: pointer;
 }
 
@@ -51,7 +50,7 @@
 
 /* Hero Section */
 .hero {
-  background-size: cover;
+  background-size:contain;
   background-position: center;
   min-height: 90vh;
   text-align: center;

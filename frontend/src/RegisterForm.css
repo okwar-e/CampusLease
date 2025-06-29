@@ -1,147 +1,150 @@
-.register-container {
-  max-width: 500px;
-  margin: 60px auto;
-  padding: 2.5rem;
-  background: #ffffff;
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+/* Page */
+.page-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
   font-family: Arial, sans-serif;
 }
 
-/* Slider toggle */
-.auth-toggle {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 2rem;
-}
-
-.slider {
-  position: relative;
-  display: flex;
-  width: 220px;
-  background: #e5e7eb;
-  border-radius: 50px;
-  overflow: hidden;
-  font-weight: bold;
-  text-align: center;
-}
-
-.toggle-btn {
-  flex: 1;
-  padding: 0.6rem 0;
-  color: #444;
-  text-decoration: none;
-  z-index: 1;
-  transition: color 0.2s ease;
-}
-
-.slider-indicator {
-  position: absolute;
+/* Navbar */
+.navbar {
+ display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 40px;
+  background-color: #fff;
+  border-bottom: 1px solid #ddd;
+  position: sticky;
   top: 0;
-  bottom: 0;
-  width: 50%;
-  background: #007bff;
-  border-radius: 50px;
-  transition: transform 0.3s ease;
-  z-index: 0;
+  z-index: 1000;
 }
 
-.slider-indicator.left {
-  transform: translateX(0%);
+.nav-left {
+  flex: 1;
 }
 
-.slider-indicator.right {
-  transform: translateX(100%);
+
+.nav-right {
+  display: flex;
+  gap: 1.5rem;
 }
 
-.slider .toggle-btn:hover {
-  color: #000;
+.logo {
+  font-size: 1.5rem;
+  font-weight: bold;
 }
 
-/* Form */
+/* Optional: buttons or links inside nav */
+.btn {
+  padding: 0.5rem 1rem;
+  border: none;
+  background: none;
+  font-weight: 500;
+  text-decoration: none;
+  color: #333;
+  cursor: pointer;
+}
+
+.btn:hover {
+  color: #007bff;
+}
+
+/* Page body for Register */
+.register-page-body {
+  display: flex;
+  justify-content: flex-start;
+  padding: 3rem 40px;
+  flex-grow: 1;
+}
+
+/* Register Container */
+.register-container {
+  width: 600px;
+  max-width: 100%;
+  background: #ffffff;
+  padding: 3rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+/* Form Header */
 .register-form h2 {
-  margin-bottom: 1.5rem;
-  text-align: center;
-  font-size: 1.4rem;
+  font-size: 1.8rem;
+  margin-bottom: 2rem;
   font-weight: bold;
   color: #111;
 }
 
-.register-form label {
+/* Input Fields */
+.input-group {
+  margin-bottom: 1.5rem;
+}
+
+.input-group label {
   display: block;
-  font-size: 0.95rem;
-  margin-bottom: 0.4rem;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
   color: #333;
 }
 
-.register-form input[type="text"],
-.register-form input[type="tel"],
-.register-form input[type="email"],
-.register-form input[type="password"],
-.register-form input[type="file"] {
+input[type="text"],
+input[type="email"],
+input[type="tel"],
+input[type="password"],
+input[type="file"] {
   display: block;
   width: 100%;
   padding: 0.75rem;
-  margin-bottom: 1.2rem;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  background-color: #f4f4f5;
+  border: 1px solid #ddd;
+  border-radius: 6px;
   font-size: 0.95rem;
-  transition: border-color 0.2s ease;
+  background-color: #fff;
 }
 
-.register-form input:focus {
+input:focus {
   border-color: #007bff;
   outline: none;
 }
 
-/* Checkbox */
-.register-form .terms {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 1.2rem;
-  font-size: 0.9rem;
-}
-
-.register-form .terms input[type="checkbox"] {
-  accent-color: #007bff;
-}
-
-/* Button */
+/* Submit Button */
 .register-form button {
   width: 100%;
   padding: 0.75rem;
-  background-color: #d5e7fd;
-  color: #000;
+  background-color: #007bff;
+  color: #fff;
   border: none;
-  border-radius: 8px;
+  border-radius: 6px;
   font-weight: bold;
   font-size: 1rem;
   cursor: pointer;
   transition: background-color 0.2s ease;
+  margin-top: 1rem;
 }
 
 .register-form button:hover {
-  background-color: #b3cdf4;
+  background-color: #0069d9;
 }
 
-/* Error */
+/* Register link */
+.register-link {
+  text-align: center;
+  color: #666;
+}
+
+.register-link a {
+  color: #007bff;
+  text-decoration: none;
+}
+
+.register-link a:hover {
+  text-decoration: underline;
+}
+
+/* Error message */
 .error {
   color: red;
   font-size: 0.9rem;
   text-align: center;
-}
-
-/* Login Link */
-.login-link {
-  text-align: center;
-  font-size: 0.9rem;
-  margin-top: 1rem;
-}
-
-.login-link a {
-  color: #007bff;
-  text-decoration: none;
-  margin-left: 4px;
+  margin-top: 0.5rem;
+  margin-bottom: 1rem;
 }

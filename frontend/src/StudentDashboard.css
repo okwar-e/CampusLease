@@ -1,0 +1,89 @@
+/* StudentDashboard.css */
+
+.student-dashboard {
+  display: flex;
+  height: 100vh;
+  font-family: 'Segoe UI', sans-serif;
+  background-color: #f8f9fa;
+}
+
+/* Sidebar Styles */
+.sidebar {
+  width: 240px;
+  background-color: #fff;
+  border-right: 1px solid #e0e0e0;
+  padding: 25px 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar h3 {
+  margin-bottom: 20px;
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #333;
+}
+
+.sidebar ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.sidebar ul li {
+  margin-bottom: 15px;
+}
+
+.sidebar ul button {
+  background: none;
+  border: none;
+  font-size: 1rem;
+  color: #333;
+  padding: 10px 12px;
+  width: 100%;
+  text-align: left;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.sidebar ul button:hover,
+.sidebar ul .active {
+  background-color: #e6f0ff;
+  color: #007bff;
+}
+
+/* Logout Button */
+.sidebar .logout-btn {
+  margin-top: auto;
+  padding: 10px;
+  background-color: #ff4d4d;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.sidebar .logout-btn:hover {
+  background-color: #cc0000;
+}
+
+/* Content Area */
+.dashboard-content {
+  flex-grow: 1;
+  padding: 30px;
+  overflow-y: auto;
+}
+
+/* Main dashboard content centering */
+.main-content {
+  flex-grow: 1;
+  padding: 40px;
+  background-color: #f9fafb;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start; /* Use 'center' for vertical centering if needed */
+  min-height: 100vh;
+  overflow-y: auto;
+}

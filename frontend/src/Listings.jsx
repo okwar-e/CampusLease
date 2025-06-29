@@ -1,8 +1,9 @@
-// --- React Frontend: Listings.jsx with Toggle ---
+// --- React Frontend: Listings.jsx with Updated Styling ---
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import ListItem from "./ListItem";
+import "./Listing.css";
 
 const Listings = () => {
   const [items, setItems] = useState([]);
@@ -10,7 +11,7 @@ const Listings = () => {
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(true);
   const [currentUserId, setCurrentUserId] = useState(null);
-  const [view, setView] = useState('marketplace');
+  const [view, setView] = useState("marketplace");
 
   const navigate = useNavigate();
 
@@ -46,57 +47,51 @@ const Listings = () => {
   };
 
   const fetchCurrentUser = async () => {
-  try {
-    const res = await axios.get("http://localhost:5050/me", {
-      withCredentials: true
-    });
+    try {
+      const res = await axios.get("http://localhost:5050/me", {
+        withCredentials: true
+      });
 
-    const user = res.data.user; // ✅ Access the nested `user`
-    setCurrentUserId(user?.id);
-    console.log("✅ Logged in user:", user);
+      const user = res.data.user;
+      setCurrentUserId(user?.id);
+      console.log("✅ Logged in user:", user);
+    } catch (err) {
+      console.warn("⚠️ Not logged in");
+      setCurrentUserId(null);
+    }
+  };
 
-  } catch (err) {
-    console.warn("⚠️ Not logged in");
-    setCurrentUserId(null);
-  }
-};
+  const handleRent = (item) => {
+    if (!currentUserId) {
+      alert("Please log in to rent items.");
+      return navigate("/login");
+    }
+    if (item.owner_id === currentUserId) {
+      return alert("You cannot lease your own item.");
+    }
+    navigate(`/rent/${item.id}`);
+  };
 
-const handleRent = (item) => {
-  if (!currentUserId) {
-    alert("Please log in to rent items.");
-    return navigate("/auth");
-  }
-  if (item.owner_id === currentUserId) {
-    return alert("You cannot lease your own item.");
-  }
-  navigate(`/rent/${item.id}`);
-};
-
-const handleToggleListForm = () => {
-  if (!currentUserId) {
-    alert("Please log in to list items.");
-    return navigate("/auth");
-  }
-  setShowForm(!showForm);
-};
-
+  const handleToggleListForm = () => {
+    if (!currentUserId) {
+      alert("Please log in to list items.");
+      return navigate("/login");
+    }
+    setShowForm(!showForm);
+  };
 
   return (
-    <div>
-      <h2>📦 My Listings & Requests</h2>
-      <div style={{ marginBottom: '20px' }}>
-        <button onClick={() => setView('marketplace')} style={{ marginRight: '10px' }}>
-          Marketplace
-        </button>
-        <button onClick={() => setView('requests')}>Requests</button>
+    <div className="listings-container">
+      <h2 className="listings-heading">📦 My Listings & Requests</h2>
+
+      <div className="view-toggle">
+        <button onClick={() => setView("marketplace")} className={view === "marketplace" ? "active" : ""}>Marketplace</button>
+        <button onClick={() => setView("requests")} className={view === "requests" ? "active" : ""}>Requests</button>
       </div>
 
-      {view === 'marketplace' && (
+      {view === "marketplace" && (
         <>
-          <button
-            onClick={handleToggleListForm}
-            style={{ marginBottom: "15px", padding: "8px", cursor: "pointer" }}
-          >
+          <button className="list-new-btn" onClick={handleToggleListForm}>
             {showForm ? "Cancel Listing" : "➕ List New Item"}
           </button>
 
@@ -105,20 +100,12 @@ const handleToggleListForm = () => {
           {loading ? (
             <p>Loading items...</p>
           ) : (
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "20px" }}>
+            <div className="listings-grid">
               {items.length === 0 ? (
                 <p>No items available for leasing.</p>
               ) : (
                 items.map((item) => (
-                  <div
-                    key={item.id}
-                    style={{
-                      border: "1px solid #ccc",
-                      padding: "15px",
-                      borderRadius: "10px",
-                      width: "200px"
-                    }}
-                  >
+                  <div key={item.id} className="item-card">
                     <h4>{item.title}</h4>
                     <p>{item.category || "Uncategorized"}</p>
                     <p>KES {item.price_per_day} /day</p>
@@ -131,24 +118,13 @@ const handleToggleListForm = () => {
                           )
                         )}`}
                         alt="Item"
-                        style={{ width: "100%", height: "120px", objectFit: "cover" }}
+                        className="item-image"
                       />
                     ) : (
                       <p style={{ color: "#888" }}>No image</p>
                     )}
 
-                    <button
-                      onClick={() => handleRent(item)}
-                      style={{
-                        marginTop: "10px",
-                        padding: "8px",
-                        backgroundColor: "#0066cc",
-                        color: "white",
-                        border: "none",
-                        borderRadius: "5px",
-                        cursor: "pointer"
-                      }}
-                    >
+                    <button className="lease-btn" onClick={() => handleRent(item)}>
                       Rent Item
                     </button>
                   </div>
@@ -159,13 +135,13 @@ const handleToggleListForm = () => {
         </>
       )}
 
-      {view === 'requests' && (
+      {view === "requests" && (
         <>
-          <h3>📨 My Requests</h3>
+          <h3 className="requests-heading">📨 My Requests</h3>
           {requests.length === 0 ? (
             <p>No item requests found.</p>
           ) : (
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <table className="requests-table">
               <thead>
                 <tr>
                   <th>Title</th>

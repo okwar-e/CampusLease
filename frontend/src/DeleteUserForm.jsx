@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import './DeleteUserForm.css'; // 👈 link to the CSS file
 
 function DeleteUserForm() {
   const [email, setEmail] = useState('');
@@ -7,7 +8,6 @@ function DeleteUserForm() {
 
   const handleDelete = async (e) => {
     e.preventDefault();
-
     if (!window.confirm(`Are you sure you want to delete ${email}?`)) return;
 
     try {
@@ -15,27 +15,32 @@ function DeleteUserForm() {
       setStatus({ type: 'success', message: res.data.message });
       setEmail('');
     } catch (err) {
-      setStatus({ type: 'error', message: err.response?.data?.error || 'Deletion failed' });
+      setStatus({
+        type: 'error',
+        message: err.response?.data?.error || 'Deletion failed',
+      });
     }
   };
 
   return (
-    <form onSubmit={handleDelete}>
-      <h3>Delete User by Email</h3>
-      <input
-        type="email"
-        placeholder="Enter user email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        required
-      />
-      <button type="submit" style={{ backgroundColor: 'red', color: 'white' }}>Delete</button>
+    <div className="delete-user-container">
+      <h3>🗑️ Delete User by Email</h3>
+      <form onSubmit={handleDelete} className="delete-user-form">
+        <input
+          type="email"
+          placeholder="Enter user email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+        />
+        <button type="submit" className="delete-btn">Delete</button>
+      </form>
       {status && (
-        <p style={{ color: status.type === 'success' ? 'green' : 'red' }}>
+        <p className={`status-msg ${status.type === 'success' ? 'success' : 'error'}`}>
           {status.message}
         </p>
       )}
-    </form>
+    </div>
   );
 }
 
