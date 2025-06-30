@@ -7,15 +7,15 @@
 
 /* Navbar */
 .navbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20px 40px;
-  background-color: #fff;
-  border-bottom: 1px solid #ddd;
-  position: sticky;
-  top: 0;
-  z-index: 1000;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 40px;
+    color: white;
+    border-bottom: 1px solid #ddd;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
 }
 
 .nav-left .logo {
@@ -53,16 +53,8 @@
   color: #000;
 }
 
-.register-btn {
-  border: 1px solid #007bff;
-  color: #007bff;
-  background: transparent;
-}
 
-.register-btn:hover {
-  background-color: #007bff;
-  color: #fff;
-}
+
 
 /* Main body */
 .login-page-body {
@@ -91,6 +83,7 @@
 
 .input-group {
   margin-bottom: 1.5rem;
+  width: 90%;
 }
 
 .input-group label {
@@ -163,7 +156,7 @@ input:focus {
 .login-form button {
   width: 100%;
   padding: 0.75rem;
-  background-color: #d5e7fd;
+  background-color:  #003366;
   border: none;
   color: #000;
   border-radius: 6px;
