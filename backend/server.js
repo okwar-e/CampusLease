@@ -424,8 +424,7 @@ app.use(session({
   saveUninitialized: true
 }));
 
-
-//pay/lease
+// /pay/lease
 app.post("/pay/lease", express.json(), async (req, res) => {
   const user = req.session.user;
   if (!user || user.role !== 'student') {
@@ -434,35 +433,45 @@ app.post("/pay/lease", express.json(), async (req, res) => {
 
   const { item_id, start_date, end_date, total_price, phone } = req.body;
 
-  // NEW: Proper date comparison (timezone-safe)
-  const now = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()); // Remove time component
-  
-  const startDate = new Date(req.body.start_date);
-  const normalizedStartDate = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+  // ✅ Normalize dates
+ // ✅ Normalize and validate dates
+try {
+  const todayStr = new Date().toISOString().split("T")[0]; // "YYYY-MM-DD"
+  const startDateStr = req.body.start_date;
 
-  if (normalizedStartDate < today) {
-    return res.status(400).json({ 
-      error: "Start date cannot be in the past. Please select today or a future date." 
+  if (!startDateStr) {
+    return res.status(400).json({ error: "Start date is required." });
+  }
+
+  if (startDateStr < todayStr) {
+    return res.status(400).json({
+      error: "Start date cannot be in the past. Please select today or a future date."
     });
   }
+} catch (e) {
+  console.error("Date parsing error:", e);
+  return res.status(400).json({ error: "Date parsing failed." });
+}
+
 
   const conn = await pool.getConnection();
   try {
     await conn.beginTransaction();
 
-    // 1. Check item availability (with lock for concurrent requests)
+    // 1. Check item availability (lock to avoid race conditions)
     const [[item]] = await conn.query(
       "SELECT owner_id, availability FROM items WHERE id = ? FOR UPDATE",
       [item_id]
     );
-    
+
     if (!item) {
       return res.status(404).json({ error: "Item not found" });
     }
+
     if (item.availability !== 1) {
       return res.status(400).json({ error: "Item is not available" });
     }
+
     if (item.owner_id === user.id) {
       return res.status(400).json({ error: "Cannot rent your own item" });
     }
@@ -473,9 +482,10 @@ app.post("/pay/lease", express.json(), async (req, res) => {
        VALUES (?, ?, ?, ?, ?, 'pending')`,
       [item_id, user.id, start_date, end_date, total_price]
     );
+
     const lease_id = leaseResult.insertId;
 
-    // 3. Initiate M-Pesa payment
+    // 3. Trigger M-Pesa STK Push
     const mpesaRes = await stkPush({
       phone,
       amount: total_price,
@@ -483,7 +493,7 @@ app.post("/pay/lease", express.json(), async (req, res) => {
       transactionDesc: `Lease ${lease_id}`
     });
 
-    // 4. Create payment record
+    // 4. Insert payment record
     await conn.query(
       `INSERT INTO payments 
        (lease_id, lender_id, leaser_id, amount, phone, status, checkout_request_id)
@@ -491,33 +501,25 @@ app.post("/pay/lease", express.json(), async (req, res) => {
       [lease_id, item.owner_id, user.id, total_price, phone, mpesaRes.CheckoutRequestID]
     );
 
-    // 5. Mark item as temporarily reserved
-   // await conn.query(
-     // "UPDATE items SET availability = 0 WHERE id = ?",
-      //[item_id]
-    //);
-
     await conn.commit();
-    
-    res.json({ 
-      success: true, 
-      message: "Lease created. Awaiting payment confirmation.", 
+
+    res.json({
+      success: true,
+      message: "Lease created. Awaiting payment confirmation.",
       lease_id,
       checkoutRequestId: mpesaRes.CheckoutRequestID
     });
 
   } catch (err) {
     await conn.rollback();
-    console.error("Lease/payment error:", err);
+    console.error("❌ Lease/payment error:", err);
     res.status(500).json({ error: "Lease/payment failed" });
   } finally {
     conn.release();
   }
 });
-
-
-//mpesa/callback
- app.post("/mpesa/callback", express.json(), async (req, res) => {
+// /mpesa/callback
+app.post("/mpesa/callback", express.json(), async (req, res) => {
   const callback = req.body;
   console.log("📦 Callback received:", JSON.stringify(callback, null, 2));
 
@@ -527,24 +529,25 @@ app.post("/pay/lease", express.json(), async (req, res) => {
 
     const resultCode = stkCallback.ResultCode;
     const checkoutRequestID = stkCallback.CheckoutRequestID;
+    const metadata = stkCallback?.CallbackMetadata?.Item;
 
-    // Get database connection from pool
+    if (resultCode === 0 && !metadata) {
+      return res.status(400).json({ error: "Missing metadata" });
+    }
+
+    let amount, phone, mpesaReceipt;
+    metadata?.forEach(item => {
+      if (item.Name === "Amount") amount = item.Value;
+      if (item.Name === "PhoneNumber") phone = item.Value;
+      if (item.Name === "MpesaReceiptNumber") mpesaReceipt = item.Value;
+    });
+
     const conn = await pool.getConnection();
-    await conn.beginTransaction(); // Start transaction
+    await conn.beginTransaction();
 
     try {
       if (resultCode === 0) {
-        // ✅ Payment was successful
-        const metadata = stkCallback.CallbackMetadata?.Item || [];
-        let amount, phone, mpesaReceipt;
-
-        metadata.forEach(item => {
-          if (item.Name === "Amount") amount = item.Value;
-          if (item.Name === "PhoneNumber") phone = item.Value;
-          if (item.Name === "MpesaReceiptNumber") mpesaReceipt = item.Value;
-        });
-
-        // 1. Update payment record
+        // Step 1: Update payment record
         const [paymentUpdate] = await conn.query(`
           UPDATE payments 
           SET 
@@ -557,53 +560,41 @@ app.post("/pay/lease", express.json(), async (req, res) => {
         `, [mpesaReceipt, amount, phone, checkoutRequestID]);
 
         if (paymentUpdate.affectedRows === 0) {
-          throw new Error("Payment record not found");
+          throw new Error("Payment record not found or already updated");
         }
 
-        // 2. Get the associated lease_id
-        const [[payment]] = await conn.query(`
-          SELECT lease_id FROM payments 
-          WHERE checkout_request_id = ?
-        `, [checkoutRequestID]);
+        // Step 2: Get lease_id
+        const [[payment]] = await conn.query(
+          `SELECT lease_id FROM payments WHERE checkout_request_id = ?`,
+          [checkoutRequestID]
+        );
 
-        // 3. Update lease status to 'approved'
-        await conn.query(`
-          UPDATE leases 
-          SET status = 'approved' 
-          WHERE id = ?
-        `, [payment.lease_id]);
+        // Step 3: Update lease
+        await conn.query(`UPDATE leases SET status = 'approved' WHERE id = ?`, [payment.lease_id]);
 
-        // 4. Get the item_id from the lease
-        const [[lease]] = await conn.query(`
-          SELECT item_id FROM leases 
-          WHERE id = ?
-        `, [payment.lease_id]);
+        // Step 4: Get item_id
+        const [[lease]] = await conn.query(`SELECT item_id FROM leases WHERE id = ?`, [payment.lease_id]);
 
-        // 5. Mark item as unavailable
-        await conn.query(`
-          UPDATE items 
-          SET availability = 0 
-          WHERE id = ?
-        `, [lease.item_id]);
+        // Step 5: Update item availability
+        await conn.query(`UPDATE items SET availability = 0 WHERE id = ?`, [lease.item_id]);
 
-        await conn.commit(); // Commit all changes
-        console.log(`✅ Payment ${mpesaReceipt} processed. Lease ${payment.lease_id} approved.`);
-        
+        await conn.commit();
+        console.log(`✅ Payment ${mpesaReceipt} processed and lease ${payment.lease_id} approved.`);
+
       } else {
-        // ❌ Payment failed - only update payment status
+        // Payment failed
         await conn.query(`
           UPDATE payments 
-          SET status = 'FAILED', 
-              transaction_time = NOW() 
+          SET status = 'FAILED', transaction_time = NOW() 
           WHERE checkout_request_id = ?
         `, [checkoutRequestID]);
-        
+
         await conn.commit();
-        console.warn(`⚠️ Payment failed: ${stkCallback.ResultDesc}`);
+        console.warn(`⚠️ Payment failed for CheckoutRequestID: ${checkoutRequestID}`);
       }
 
-      res.status(200).json({ message: "Callback handled" });
-      
+      res.status(200).json({ message: "Callback handled successfully" });
+
     } catch (err) {
       await conn.rollback();
       console.error("❌ Transaction failed:", err);
@@ -613,10 +604,11 @@ app.post("/pay/lease", express.json(), async (req, res) => {
     }
 
   } catch (err) {
-    console.error("❌ Error in M-Pesa callback:", err);
+    console.error("❌ Top-level callback error:", err);
     res.status(500).json({ error: "Server error" });
   }
 });
+
 
 
 // Add this to your existing backend (likely in index.js or routes.js)
