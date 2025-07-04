@@ -1,71 +1,122 @@
-/* Navbar styling */
+/* ===== Navbar ===== */
 .navbar {
-   color: black;
+  background-color: #ffffff;
   padding: 1rem 2rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px 32px;
+  border-bottom: 1px solid #e5e7eb;
+  position: sticky;
+  top: 0;
   z-index: 1000;
 }
 
 .navbar-logo {
-  font-size: 1.3rem;
-  font-weight: bold;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #1f2937;
 }
 
 .navbar-links a {
-  color: black;
-  margin-left: 20px;
   text-decoration: none;
+  color: #333;
   font-weight: 500;
+  font-size: 1rem;
+  padding: 6px 16px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
 }
 
 .navbar-links a:hover {
-  text-decoration: underline;
+  color: #007bff;
+  background-color: #e5f0ff;
+  border-color: #007bff;
 }
 
-/* Existing form styles (optional if already defined) */
+
+
+/* ===== Container ===== */
 .register-container {
-  padding: 2rem;
-  max-width: 500px;
-  margin: 40px auto;
-  background: #fefefe;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  max-width: 520px;
+  margin: 3rem auto;
+  padding: 2.5rem;
+  background: #ffffff;
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
+  font-family: 'Inter', sans-serif;
 }
 
+/* ===== Form Title ===== */
 .register-form h2 {
   text-align: center;
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #111827;
 }
 
+/* ===== Inputs & Selects ===== */
 .register-form input,
 .register-form select {
   width: 100%;
   padding: 0.75rem;
+  font-size: 1rem;
   margin-bottom: 1rem;
-  border: 1px solid #ccc;
-  border-radius: 5px;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  background-color: #ffffff;
+  transition: border-color 0.2s ease;
 }
 
+.register-form input:focus,
+.register-form select:focus {
+  border-color: #2563eb;
+  outline: none;
+}
+
+/* ===== Button ===== */
 .register-form button {
   width: 100%;
   padding: 0.75rem;
-  background-color: #003366;
+  background-color: #2563eb;
   color: white;
   border: none;
-  border-radius: 5px;
-  font-weight: bold;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  font-size: 1rem;
   cursor: pointer;
+  transition: background-color 0.2s ease;
 }
 
 .register-form button:hover {
-  background-color: #002244;
+  background-color: #1e40af;
 }
 
+/* ===== Error Message ===== */
 .error {
-  color: red;
+  color: #dc2626;
+  font-size: 0.9rem;
   text-align: center;
   margin-bottom: 1rem;
+}
+
+/* ===== Password Strength Meter ===== */
+.password-strength {
+  font-weight: 500;
+  font-size: 0.9rem;
+  margin-top: -0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.password-strength.weak {
+  color: #ef4444;
+}
+
+.password-strength.medium {
+  color: #f59e0b;
+}
+
+.password-strength.strong {
+  color: #10b981;
 }

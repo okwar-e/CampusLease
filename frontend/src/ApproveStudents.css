@@ -1,44 +1,56 @@
+/* Container */
 .approve-students-container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 25px;
+  padding: 2rem;
+  font-family: 'Inter', sans-serif;
+  background-color: #f9fafb;
 }
 
+/* Heading */
 .approve-students-container h2 {
-  margin-bottom: 20px;
+  margin-bottom: 1.5rem;
   font-weight: 600;
-  color: #333;
+  font-size: 1.5rem;
+  color: #1f2937;
+  text-align: center;
 }
 
+/* Students Table */
 .students-table {
   width: 100%;
   border-collapse: collapse;
-  background-color: #fff;
-  border-radius: 8px;
+  background-color: #ffffff;
+  border-radius: 0.75rem;
   overflow: hidden;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.03);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
 }
 
+/* Table Headers and Cells */
 .students-table th,
 .students-table td {
-  padding: 14px;
+  padding: 1rem;
   text-align: center;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid #f1f5f9;
   vertical-align: middle;
+  font-size: 0.95rem;
+  color: #374151;
 }
 
 .students-table th {
-  background-color: #f5f5f5;
-  font-weight: 500;
+  background-color: #f1f5f9;
+  font-weight: 600;
+  color: #111827;
 }
 
+/* Thumbnail Images */
 .thumbnail-img {
-  width: 80px;
-  height: 80px;
+  width: 70px;
+  height: 70px;
   object-fit: cover;
-  border-radius: 6px;
+  border-radius: 0.5rem;
+  border: 1px solid #e5e7eb;
   cursor: pointer;
-  border: 1px solid #ddd;
   transition: transform 0.2s ease;
 }
 
@@ -46,50 +58,58 @@
   transform: scale(1.05);
 }
 
+/* Action Buttons */
+.action-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
 .action-buttons button {
-  padding: 8px 14px;
-  margin: 5px;
+  padding: 0.6rem 1rem;
   border: none;
-  border-radius: 5px;
+  border-radius: 0.5rem;
   font-weight: 500;
+  font-size: 0.9rem;
   cursor: pointer;
-  transition: background-color 0.2s ease-in-out;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 .action-buttons button:first-child {
-  background-color: #2e7d32;
-  color: white;
+  background-color: #4ade80;
+  color: #065f46;
 }
 
 .action-buttons button:first-child:hover {
-  background-color: #1b5e20;
+  background-color: #22c55e;
 }
 
 .action-buttons button:last-child {
-  background-color: #d32f2f;
-  color: white;
+  background-color: #f87171;
+  color: #7f1d1d;
 }
 
 .action-buttons button:last-child:hover {
-  background-color: #b71c1c;
+  background-color: #ef4444;
 }
 
+/* Modal for viewing larger image */
 .modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100vw;
   height: 100vh;
-  background-color: rgba(0,0,0,0.8);
+  background-color: rgba(0,0,0,0.85);
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 999;
+  z-index: 1000;
 }
 
 .modal-overlay img {
   max-width: 90%;
   max-height: 90%;
-  border-radius: 10px;
-  box-shadow: 0 0 15px white;
+  border-radius: 0.75rem;
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
 }

@@ -1,19 +1,19 @@
-/* Overall Layout */
+/* Layout */
 .dashboard-container {
   display: flex;
   height: 100vh;
-  font-family: 'Segoe UI', sans-serif;
+  font-family: 'Inter', sans-serif;
   background-color: #f9fafb;
 }
 
 /* Sidebar */
 .sidebar {
-  width: 240px;
-  background-color: #fff;
+  width: 250px;
+  background-color: #ffffff;
   border-right: 1px solid #e5e7eb;
   display: flex;
   flex-direction: column;
-  padding: 20px 0;
+  padding: 2rem 0;
   position: fixed;
   height: 100%;
   top: 0;
@@ -22,30 +22,35 @@
 
 .sidebar h2 {
   text-align: center;
-  font-size: 1.2rem;
+  font-size: 1.25rem;
   font-weight: 600;
-  margin-bottom: 30px;
-  color: #111827;
+  margin-bottom: 2rem;
+  color: #1f2937;
 }
 
 .sidebar button {
+  width: 100%;
   background: none;
   border: none;
-  padding: 12px 24px;
-  text-align: left;
+  padding: 0.75rem 1.5rem;
   font-size: 1rem;
   color: #374151;
   cursor: pointer;
   display: flex;
   align-items: center;
+  justify-content: flex-start;
   gap: 12px;
-  transition: background-color 0.2s;
+  transition: background-color 0.2s ease, color 0.2s ease;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  box-sizing: border-box;
 }
+
 
 .sidebar button:hover,
 .sidebar button.active {
-  background-color: #f3f4f6;
-  color: #111827;
+  background-color: #e0f2fe;
+  color: #2563eb;
   font-weight: 600;
 }
 
@@ -55,16 +60,18 @@
 
 /* Logout Button */
 .sidebar .logout {
-  margin-top: 40px;
-  padding: 12px 24px;
+  margin-top: auto;
+  padding: 0.75rem 1.5rem;
   font-size: 1rem;
-  color: #6b7280;
-  background: none;
+
+  color: white;
+  background-color: red;
   border: none;
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 12px;
+  border-radius: 0.5rem;
 }
 
 .sidebar .logout:hover {
@@ -74,65 +81,80 @@
 
 /* Main Content */
 .main-content {
-  margin-left: 240px;
-  padding: 40px;
-  width: calc(100% - 240px);
+  margin-left: 250px;
+  padding: 2.5rem;
+  width: calc(100% - 250px);
   overflow-y: auto;
   background-color: #f9fafb;
 }
 
-/* Top Cards */
+/* Headings */
+h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 1.5rem;
+}
+
+h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 2rem 0 1rem;
+}
+
+/* Stats Cards */
 .stats-cards {
   display: flex;
-  gap: 20px;
-  margin-bottom: 30px;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
 }
 
 .card {
-  background: #fff;
-  padding: 20px 30px;
-  border-radius: 10px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  background: #ffffff;
+  padding: 1.5rem;
+  border-radius: 1rem;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.04);
   flex: 1;
   text-align: center;
   border: 1px solid #e5e7eb;
 }
 
 .card h3 {
-  font-size: 1rem;
+  font-size: 0.95rem;
   color: #6b7280;
-  margin-bottom: 10px;
+  margin-bottom: 0.75rem;
 }
 
 .card p {
   font-size: 1.6rem;
-  font-weight: bold;
+  font-weight: 700;
   color: #111827;
 }
 
-/* Table Styles */
+/* Table */
 .activity-table {
   width: 100%;
   border-collapse: collapse;
-  background-color: #fff;
-  border: 1px solid #e5e7eb;
-  border-radius: 10px;
+  background-color: #ffffff;
+  border-radius: 1rem;
   overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.03);
 }
 
 .activity-table th,
 .activity-table td {
-  padding: 16px 20px;
+  padding: 1rem 1.25rem;
   text-align: left;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid #f1f5f9;
   font-size: 0.95rem;
+  color: #374151;
 }
 
 .activity-table th {
   background-color: #f9fafb;
   font-weight: 600;
-  color: #374151;
+  color: #1f2937;
 }
 
 .activity-table td a {
@@ -144,100 +166,105 @@
   text-decoration: underline;
 }
 
-/* Headings */
-h1 {
-  font-size: 1.75rem;
-  font-weight: bold;
-  color: #111827;
-  margin-bottom: 20px;
-}
-
-h2 {
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: #111827;
-  margin: 30px 0 15px;
-}
-/* AdminDashboards.css additions */
-.quick-stats {
-  font-size: 0.9rem;
-  margin: 10px 0;
-  display: flex;
-  gap: 15px;
-}
-
+/* Content Header */
 .content-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 1.5rem;
 }
 
 .last-updated {
-  color: #666;
+  color: #6b7280;
   font-size: 0.8rem;
 }
 
-/* Item Management */
-.manage-items {
-  padding: 20px;
+/* Quick Stats */
+.quick-stats {
+  font-size: 0.9rem;
+  margin: 0.75rem 0;
+  display: flex;
+  gap: 1rem;
+  color: #4b5563;
 }
+
+/* Item Management Section */
+.manage-items {
+  padding: 1.5rem;
+}
+
 .manage-items .controls {
   display: flex;
-  gap: 15px;
-  margin-bottom: 20px;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
 }
+
 .manage-items table {
   width: 100%;
   border-collapse: collapse;
 }
+
 .manage-items th, .manage-items td {
-  padding: 12px;
+  padding: 0.85rem 1rem;
   text-align: left;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid #f3f4f6;
 }
+
 .manage-items .reported {
-  color: #ff9800;
-  font-weight: bold;
+  color: #f59e0b;
+  font-weight: 600;
 }
+
 .manage-items .remove-btn {
-  background: #f44336;
+  background: #ef4444;
   color: white;
   border: none;
-  padding: 5px 10px;
-  border-radius: 4px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.9rem;
   cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.manage-items .remove-btn:hover {
+  background-color: #dc2626;
 }
 
 /* Analytics Panel */
 .analytics-panel {
-  padding: 20px;
+  padding: 1.5rem;
 }
+
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 20px;
-  margin-bottom: 30px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 2rem;
 }
+
 .stat-card {
   background: white;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  padding: 1.25rem;
+  border-radius: 0.75rem;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.04);
 }
+
 .stat-card h3 {
   margin-top: 0;
-  color: #666;
+  color: #6b7280;
   font-size: 1rem;
 }
+
 .stat-card p {
   font-size: 1.8rem;
-  margin: 10px 0 0;
-  font-weight: bold;
+  margin: 0.75rem 0 0;
+  font-weight: 700;
+  color: #111827;
 }
+
 .charts {
   background: white;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  padding: 1.5rem;
+  border-radius: 0.75rem;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
 }

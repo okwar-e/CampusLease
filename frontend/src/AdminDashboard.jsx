@@ -91,11 +91,13 @@ const AdminDashboard = () => {
             onClick={() => setActiveTab("analytics")}>
             📊 Analytics
           </button>
-        </nav>
 
-        <button className="logout" onClick={handleLogout}>
+           <button className="logout" onClick={handleLogout}>
           ← Logout
         </button>
+        </nav>
+
+       
       </aside>
 
       <main className="main-content">
@@ -108,9 +110,7 @@ const AdminDashboard = () => {
             {activeTab === "delete" && ""}
             {activeTab === "analytics" && ""}
           </h1>
-          <div className="last-updated">
-            Updated: {new Date().toLocaleTimeString()}
-          </div>
+        
         </header>
         
         {renderContent()}

@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import axios from "axios";
+import './ListItem.css';
+
 
 const ListItem = ({ onSuccess }) => {
   const [formData, setFormData] = useState({
@@ -64,67 +66,73 @@ const ListItem = ({ onSuccess }) => {
     }
   };
 
-  return (
-    <div>
-      <h2>List a New Item</h2>
-      {error && <p style={{ color: "red" }}>{error}</p>}
-      {message && <p style={{ color: "green" }}>{message}</p>}
+ return (
+  <div className="list-item-container">
+    <h2>List a New Item</h2>
 
-      <form onSubmit={handleSubmit} encType="multipart/form-data">
-        <input
-          type="text"
-          name="title"
-          placeholder="Item title"
-          value={formData.title}
-          onChange={handleChange}
-          required
-        /><br />
+    {error && <p className="error-text">{error}</p>}
+    {message && <p className="success-text">{message}</p>}
 
-        <textarea
-          name="description"
-          placeholder="Description"
-          value={formData.description}
-          onChange={handleChange}
-          required
-        /><br />
+    <form onSubmit={handleSubmit} encType="multipart/form-data">
+      <input
+        type="text"
+        name="title"
+        placeholder="Item title"
+        value={formData.title}
+        onChange={handleChange}
+        required
+      />
 
-        <input
-          type="text"
-          name="category"
-          placeholder="Category (e.g. Electronics)"
-          value={formData.category}
-          onChange={handleChange}
-        /><br />
+      <textarea
+        name="description"
+        placeholder="Description"
+        value={formData.description}
+        onChange={handleChange}
+        required
+      />
 
-        <select name="condition" value={formData.condition} onChange={handleChange}>
-          <option value="new">New</option>
-          <option value="good">Good</option>
-          <option value="fair">Fair</option>
-          <option value="poor">Poor</option>
-        </select><br />
+      <input
+        type="text"
+        name="category"
+        placeholder="Category (e.g. Electronics)"
+        value={formData.category}
+        onChange={handleChange}
+      />
 
-        <input
-          type="number"
-          name="price_per_day"
-          placeholder="Price per day (Ksh)"
-          value={formData.price_per_day}
-          onChange={handleChange}
-          required
-        /><br />
+      <select
+        name="condition"
+        value={formData.condition}
+        onChange={handleChange}
+      >
+        <option value="new">New</option>
+        <option value="good">Good</option>
+        <option value="fair">Fair</option>
+        <option value="poor">Poor</option>
+      </select>
 
-        <label>Upload Item Image:</label>
-        <input
-          type="file"
-          name="image"
-          accept="image/*"
-          onChange={handleChange}
-          required
-        /><br />
+      <input
+        type="number"
+        name="price_per_day"
+        placeholder="Price per day (Ksh)"
+        value={formData.price_per_day}
+        onChange={handleChange}
+        required
+      />
 
-        <button type="submit">Submit</button>
-      </form>
-    </div>
-  );
+      <label>Upload Item Image:</label>
+      <input
+        type="file"
+        name="image"
+        accept="image/*"
+        onChange={handleChange}
+        required
+      />
+
+      <button type="submit">Submit</button>
+    </form>
+  </div>
+);
+  
 };
 
 export default ListItem;

@@ -106,7 +106,6 @@ const LoginForm = () => {
                 <input type="checkbox" id="remember" />
                 <label htmlFor="remember">Remember me</label>
               </div>
-              <a href="#" className="forgot-password">Forgot Password?</a>
             </div>
 
             <button type="submit" disabled={loading}>
@@ -114,7 +113,7 @@ const LoginForm = () => {
             </button>
 
             <div className="register-link">
-              Don't have an account? <a href="#">Register</a>
+              Don't have an account? <a href="/register">Register</a>
             </div>
           </form>
         </div>

@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
+import "./RentItem.css";
+
 
 const RentItem = () => {
   const { id } = useParams();
@@ -53,7 +55,7 @@ const RentItem = () => {
     
     if (response.data.success) {
       alert("M-Pesa payment prompt sent!");
-      navigate("/student/leases");
+      navigate("/student");
     }
   } catch (err) {
     console.error("Payment error:", err.response?.data || err);
@@ -67,61 +69,51 @@ const RentItem = () => {
   if (!item) return <p>Loading item...</p>;
 
   return (
-    <div style={{ padding: "20px", maxWidth: "500px", margin: "0 auto" }}>
-      <h2>Rent "{item.title}"</h2>
-      <p>📂 Category: {item.category}</p>
-      <p>💰 Price: <strong>KES {item.price_per_day}</strong> / day</p>
+  <div className="rent-container">
+    <h2>Rent "{item.title}"</h2>
+    <p>📂 Category: {item.category}</p>
+    <p>💰 Price: <strong>KES {item.price_per_day}</strong> / day</p>
 
-      {item.image && (
-        <img
-          src={`data:image/jpeg;base64,${btoa(
-            new Uint8Array(item.image.data).reduce((data, byte) => data + String.fromCharCode(byte), "")
-          )}`}
-          alt="Item"
-          style={{ width: "100%", borderRadius: "10px", margin: "10px 0" }}
-        />
-      )}
+    {item.image && (
+      <img
+        src={`data:image/jpeg;base64,${btoa(
+          new Uint8Array(item.image.data).reduce(
+            (data, byte) => data + String.fromCharCode(byte),
+            ""
+          )
+        )}`}
+        alt="Item"
+        className="rent-image"
+      />
+    )}
 
-      <form onSubmit={handleSubmit}>
-        <label>📅 Number of Days:</label><br />
-        <input
-          type="number"
-          min="1"
-          value={days}
-          onChange={(e) => setDays(e.target.value)}
-          required
-          style={{ width: "100%", padding: "8px", marginBottom: "10px" }}
-        /><br />
+    <form onSubmit={handleSubmit} className="rent-form">
+      <label>📅 Number of Days:</label>
+      <input
+        type="number"
+        min="1"
+        value={days}
+        onChange={(e) => setDays(e.target.value)}
+        required
+      />
 
-        <label>📱 M-Pesa Phone (2547XXXXXXXX):</label><br />
-        <input
-          type="tel"
-          value={phone}
-          onChange={(e) => setPhone(e.target.value)}
-          required
-          style={{ width: "100%", padding: "8px", marginBottom: "20px" }}
-        /><br />
+      <label>📱 M-Pesa Phone (2547XXXXXXXX):</label>
+      <input
+        type="tel"
+        value={phone}
+        onChange={(e) => setPhone(e.target.value)}
+        required
+      />
 
-        <button
-          type="submit"
-          disabled={loading}
-          style={{
-            width: "100%",
-            padding: "10px",
-            backgroundColor: "#28a745",
-            color: "white",
-            border: "none",
-            borderRadius: "5px",
-            fontWeight: "bold"
-          }}
-        >
-          {loading
-            ? "Processing..."
-            : `Pay KES ${(item.price_per_day * days).toFixed(2)} & Rent`}
-        </button>
-      </form>
-    </div>
-  );
+      <button type="submit" disabled={loading} className="rent-button">
+        {loading
+          ? "Processing..."
+          : `Pay KES ${(item.price_per_day * days).toFixed(2)} & Rent`}
+      </button>
+    </form>
+  </div>
+);
+
 };
 
 export default RentItem;

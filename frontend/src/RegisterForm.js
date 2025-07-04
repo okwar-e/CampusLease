@@ -15,21 +15,55 @@ const RegisterForm = () => {
   });
 
   const [error, setError] = useState('');
+  const [passwordStrength, setPasswordStrength] = useState('');
 
   const handleChange = (e) => {
     const { name, value, files } = e.target;
+
     if (name === 'selfie' || name === 'id_card') {
       setFormData((prev) => ({ ...prev, [name]: files[0] }));
     } else {
       setFormData((prev) => ({ ...prev, [name]: value }));
+
+      if (name === 'password') {
+        const strength = getPasswordStrength(value);
+        setPasswordStrength(strength);
+      }
     }
+  };
+
+  const validatePassword = (password) => {
+    const isLongEnough = password.length > 8;
+    const hasUppercase = /[A-Z]/.test(password);
+    const hasSpecialChar = /[^A-Za-z0-9]/.test(password);
+    return isLongEnough && hasUppercase && hasSpecialChar;
+  };
+
+  const getPasswordStrength = (password) => {
+    let strength = 0;
+    if (password.length >= 8) strength++;
+    if (/[A-Z]/.test(password)) strength++;
+    if (/[0-9]/.test(password)) strength++;
+    if (/[^A-Za-z0-9]/.test(password)) strength++;
+
+    if (strength <= 1) return 'Weak';
+    if (strength === 2 || strength === 3) return 'Medium';
+    return 'Strong';
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
-    if (formData.password !== formData.confirmPassword) {
+    const { password, confirmPassword } = formData;
+
+    if (!validatePassword(password)) {
+      return setError(
+        'Password must be more than 8 characters, contain at least one uppercase letter and one special character.'
+      );
+    }
+
+    if (password !== confirmPassword) {
       return setError("Passwords do not match.");
     }
 
@@ -37,7 +71,7 @@ const RegisterForm = () => {
     payload.append('full_name', formData.full_name);
     payload.append('school_email', formData.school_email);
     payload.append('phone_number', formData.phone_number);
-    payload.append('password', formData.password);
+    payload.append('password', password);
     payload.append('selfie', formData.selfie);
     payload.append('id_card', formData.id_card);
 
@@ -64,23 +98,77 @@ const RegisterForm = () => {
         </div>
       </nav>
 
-      {/* Form */}
+      {/* Registration Form */}
       <div className="register-container">
         <form onSubmit={handleSubmit} encType="multipart/form-data" className="register-form">
           <h2>Student Registration</h2>
           {error && <p className="error">{error}</p>}
 
-          <input type="text" name="full_name" placeholder="Full Name" value={formData.full_name} onChange={handleChange} required />
-          <input type="email" name="school_email" placeholder="School Email" value={formData.school_email} onChange={handleChange} required />
-          <input type="tel" name="phone_number" placeholder="Phone Number" value={formData.phone_number} onChange={handleChange} required />
-          <input type="password" name="password" placeholder="Password" value={formData.password} onChange={handleChange} required />
-          <input type="password" name="confirmPassword" placeholder="Confirm Password" value={formData.confirmPassword} onChange={handleChange} required />
+          <input
+            type="text"
+            name="full_name"
+            placeholder="Full Name"
+            value={formData.full_name}
+            onChange={handleChange}
+            required
+          />
+          <input
+            type="email"
+            name="school_email"
+            placeholder="School Email"
+            value={formData.school_email}
+            onChange={handleChange}
+            required
+          />
+          <input
+            type="tel"
+            name="phone_number"
+            placeholder="Phone Number"
+            value={formData.phone_number}
+            onChange={handleChange}
+            required
+          />
+          <input
+            type="password"
+            name="password"
+            placeholder="Password"
+            value={formData.password}
+            onChange={handleChange}
+            pattern="(?=.*[A-Z])(?=.*[^A-Za-z0-9]).{9,}"
+            title="Must be more than 8 characters, with at least one uppercase letter and one special character"
+            required
+          />
+          {formData.password && (
+            <p className={`password-strength ${passwordStrength.toLowerCase()}`}>
+              Strength: {passwordStrength}
+            </p>
+          )}
+          <input
+            type="password"
+            name="confirmPassword"
+            placeholder="Confirm Password"
+            value={formData.confirmPassword}
+            onChange={handleChange}
+            required
+          />
 
           <label>Upload Selfie:</label>
-          <input type="file" name="selfie" accept="image/*" onChange={handleChange} required />
+          <input
+            type="file"
+            name="selfie"
+            accept="image/*"
+            onChange={handleChange}
+            required
+          />
 
           <label>Upload Student ID:</label>
-          <input type="file" name="id_card" accept="image/*" onChange={handleChange} required />
+          <input
+            type="file"
+            name="id_card"
+            accept="image/*"
+            onChange={handleChange}
+            required
+          />
 
           <button type="submit">Register</button>
         </form>

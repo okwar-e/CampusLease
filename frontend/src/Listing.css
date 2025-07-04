@@ -1,95 +1,104 @@
-/* Listings.css */
-
+/* Layout and Container */
 .listings-container {
   max-width: 1100px;
   margin: 0 auto;
-  padding: 40px 20px;
-  font-family: Arial, sans-serif;
+  padding: 3rem 1.5rem;
+  font-family: 'Inter', sans-serif;
   background-color: #f9f9f9;
 }
 
+/* Heading */
 .listings-heading {
   text-align: center;
-  font-size: 2rem;
-  font-weight: bold;
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: #111827;
   margin-bottom: 2rem;
 }
 
+/* View Toggle Buttons */
 .view-toggle {
   display: flex;
   justify-content: center;
-  gap: 10px;
-  margin-bottom: 20px;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
 }
 
 .view-toggle button {
-  padding: 10px 20px;
+  padding: 0.6rem 1.25rem;
   background-color: #e5e7eb;
   border: none;
   border-radius: 8px;
-  cursor: pointer;
   font-weight: 500;
-  transition: background-color 0.3s ease;
+  color: #374151;
+  cursor: pointer;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .view-toggle button.active,
 .view-toggle button:hover {
-  background-color: #007bff;
-  color: white;
+  background-color: #93c5fd;
+  color: #111827;
 }
 
+/* New Listing Button */
 .list-new-btn {
   display: block;
-  margin: 0 auto 30px auto;
-  padding: 10px 20px;
-  background-color: #28a745;
-  color: white;
+  margin: 0 auto 2rem auto;
+  padding: 0.75rem 1.5rem;
+  background-color: #93c5fd;
+  color: #111827;
   border: none;
-  border-radius: 6px;
-  font-weight: bold;
+  border-radius: 8px;
+  font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  transition: background-color 0.3s ease;
 }
 
 .list-new-btn:hover {
-  background-color: #218838;
+  background-color: #60a5fa;
 }
 
+/* Grid for Item Cards */
 .listings-grid {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 25px;
+  gap: 24px;
 }
 
+/* Individual Item Card */
 .item-card {
-  background: #fff;
-  border: 1px solid #ddd;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
   border-radius: 12px;
-  padding: 16px;
+  padding: 1rem;
   width: 240px;
   text-align: center;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-  transition: transform 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .item-card:hover {
-  transform: translateY(-5px);
+  transform: translateY(-4px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
+/* Item Image */
 .item-image {
   width: 100%;
   height: 160px;
   object-fit: cover;
-  border-radius: 6px;
-  margin-bottom: 10px;
+  border-radius: 8px;
+  margin-bottom: 0.75rem;
 }
 
+/* Lease Button */
 .lease-btn {
-  margin-top: 10px;
-  padding: 10px;
-  background-color: #007bff;
-  color: #fff;
+  margin-top: 0.75rem;
+  padding: 0.65rem;
+  background-color: #3b82f6;
+  color: #ffffff;
   border: none;
   border-radius: 6px;
   cursor: pointer;
@@ -99,37 +108,44 @@
 }
 
 .lease-btn:hover {
-  background-color: #0056b3;
+  background-color: #2563eb;
 }
 
+/* Requests Section */
 .requests-heading {
-  margin-top: 30px;
+  margin-top: 3rem;
   font-size: 1.5rem;
+  font-weight: 600;
   text-align: center;
-  margin-bottom: 20px;
+  color: #111827;
+  margin-bottom: 1.5rem;
 }
 
+/* Requests Table */
 .requests-table {
   width: 100%;
   border-collapse: collapse;
-  background: white;
-  border-radius: 10px;
+  background: #ffffff;
+  border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
 }
 
 .requests-table th,
 .requests-table td {
-  padding: 12px 15px;
-  border-bottom: 1px solid #eee;
+  padding: 0.9rem 1.2rem;
+  border-bottom: 1px solid #f3f4f6;
   text-align: left;
+  font-size: 0.95rem;
+  color: #374151;
 }
 
 .requests-table th {
-  background-color: #f0f0f0;
+  background-color: #f1f5f9;
   font-weight: 600;
+  color: #1f2937;
 }
 
 .requests-table tr:hover {
-  background-color: #f9f9f9;
+  background-color: #f9fafb;
 }
