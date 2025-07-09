@@ -149,3 +149,15 @@
 .requests-table tr:hover {
   background-color: #f9fafb;
 }
+.urgency-low {
+  color: green;
+  font-weight: bold;
+}
+.urgency-medium {
+  color: orange;
+  font-weight: bold;
+}
+.urgency-high {
+  color: red;
+  font-weight: bold;
+}

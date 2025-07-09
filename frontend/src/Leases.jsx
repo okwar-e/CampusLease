@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import './leases.css'; // 🔹 Make sure to create this CSS file
 
 const Leases = () => {
   const [leases, setLeases] = useState([]);
@@ -31,8 +32,8 @@ const Leases = () => {
     })}`;
 
   return (
-    <div className="leases-section">
-      <h2>📄 My Leases</h2>
+    <div className="leases-container">
+      <h2>📄 Items I'm Using</h2>
       {loading ? (
         <p>Loading...</p>
       ) : error ? (
@@ -40,33 +41,27 @@ const Leases = () => {
       ) : leases.length === 0 ? (
         <p>No active leases found.</p>
       ) : (
-        <table border="1" cellPadding="10" style={{ width: "100%", borderCollapse: "collapse" }}>
-          <thead style={{ backgroundColor: "#f0f0f0" }}>
+        <table className="leases-table">
+          <thead>
             <tr>
               <th>Item</th>
               <th>Start Date</th>
               <th>End Date</th>
               <th>Status</th>
               <th>Daily Price</th>
-              <th>Total Cost</th>
-              {/* Future button: <th>Action</th> */}
+              <th>Owner Phone</th> {/* NEW */}
             </tr>
           </thead>
           <tbody>
             {leases.map((lease) => (
               <tr key={lease.id}>
-                <td>{lease.item_title || "Untitled Item"}</td>
-                <td>{new Date(lease.start_date).toLocaleDateString()}</td>
-                <td>{new Date(lease.end_date).toLocaleDateString()}</td>
-                <td>{lease.status.charAt(0).toUpperCase() + lease.status.slice(1)}</td>
-                <td>{formatCurrency(lease.price_per_day)}</td>
-                <td>{formatCurrency(lease.total_amount)}</td>
-                {/* Future feature:
-                <td>
-                  {lease.status === 'active' && (
-                    <button onClick={() => handleReturn(lease.id)}>Return</button>
-                  )}
-                </td> */}
+                <td data-label="Item">{lease.item_title || "Untitled Item"}</td>
+                <td data-label="Start Date">{new Date(lease.start_date).toLocaleDateString()}</td>
+                <td data-label="End Date">{new Date(lease.end_date).toLocaleDateString()}</td>
+                <td data-label="Status">{lease.status.charAt(0).toUpperCase() + lease.status.slice(1)}</td>
+                <td data-label="Daily Price">{formatCurrency(lease.price_per_day)}</td>
+                <td data-label="Owner Phone">{lease.owner_phone || "N/A"}</td> {/* NEW */}
+                
               </tr>
             ))}
           </tbody>

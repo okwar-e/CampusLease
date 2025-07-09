@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import './profiles.css';
 
 const Profile = () => {
   const [profile, setProfile] = useState(null);
@@ -26,7 +27,7 @@ const Profile = () => {
   const handleUpdate = async () => {
     try {
       const formData = new FormData();
-      formData.append("full_name", profile.full_name);
+      formData.append("full_name", profile.full_name || '');
       formData.append("phone", profile.phone || '');
       if (selfieFile) formData.append("selfie", selfieFile);
       if (idCardFile) formData.append("id_card", idCardFile);
@@ -43,45 +44,38 @@ const Profile = () => {
     }
   };
 
-  const imageStyle = {
-    width: "120px",
-    height: "120px",
-    objectFit: "cover",
-    borderRadius: "8px",
-    border: "1px solid #ccc",
-  };
-
   return (
-    <div className="profile-section">
+    <div className="profile-container">
       <h2>My Profile</h2>
-      {error && <p style={{ color: "red" }}>{error}</p>}
+
+      {error && <p className="error-text">{error}</p>}
+
       {profile ? (
-        <div style={{ textAlign: "left", maxWidth: "500px", margin: "0 auto" }}>
-          <label><strong>Full Name:</strong></label>
+        <div className="profile-form">
+          <label>Full Name:</label>
           <input
             type="text"
-            value={profile.full_name}
+            value={profile.full_name || ''}
             onChange={(e) => setProfile({ ...profile, full_name: e.target.value })}
-            style={{ width: "100%", marginBottom: "1rem" }}
           />
 
-          <p><strong>Email:</strong> {profile.school_email}</p>
+          <label>School Email:</label>
+          <input
+            type="text"
+            value={profile.school_email || ''}
+            readOnly
+          />
 
-          <label><strong>Phone Number:</strong></label>
+          <label>Phone Number:</label>
           <input
             type="tel"
             value={profile.phone || ''}
             onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
-            style={{ width: "100%", marginBottom: "1rem" }}
           />
 
-          <p><strong>Status:</strong> {profile.status}</p>
 
-         
 
-          <button onClick={handleUpdate} style={{ marginTop: "20px" }}>
-            Save Changes
-          </button>
+          <button onClick={handleUpdate}>Save Changes</button>
         </div>
       ) : (
         <p>Loading profile...</p>

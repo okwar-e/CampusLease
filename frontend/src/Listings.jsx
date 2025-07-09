@@ -21,6 +21,13 @@
       fetchRequests();
     }, []);
 
+    const [searchTerm, setSearchTerm] = useState('');
+    const filteredItems = items.filter(item =>
+  item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  (item.category && item.category.toLowerCase().includes(searchTerm.toLowerCase()))
+);
+
+
     const fetchItems = async () => {
       try {
         const res = await axios.get("http://localhost:5050/items/available", {
@@ -36,15 +43,16 @@
     };
 
     const fetchRequests = async () => {
-      try {
-        const res = await axios.get("http://localhost:5050/student/requests", {
-          withCredentials: true
-        });
-        setRequests(res.data);
-      } catch (err) {
-        console.error("Error fetching requests:", err);
-      }
-    };
+  try {
+    const res = await axios.get("http://localhost:5050/requests/all", {
+      withCredentials: true
+    });
+    setRequests(res.data);
+  } catch (err) {
+    console.error("Error fetching requests:", err);
+  }
+};
+
 
     const fetchCurrentUser = async () => {
       try {
@@ -89,51 +97,62 @@
           <button onClick={() => setView("requests")} className={view === "requests" ? "active" : ""}>Requests</button>
         </div>
 
+
         {view === "marketplace" && (
-          <>
-            <button className="list-new-btn" onClick={handleToggleListForm}>
-              {showForm ? "Cancel Listing" : "➕ List New Item"}
-            </button>
+  <>
+    <button className="list-new-btn" onClick={handleToggleListForm}>
+      {showForm ? "Cancel Listing" : "➕ List New Item"}
+    </button>
 
-            {showForm && <ListItem onSuccess={() => setShowForm(false)} />}
+    {/* 🔍 Search Bar */}
+    <input
+      type="text"
+      className="search-input"
+      placeholder="Search items by title or category..."
+      value={searchTerm}
+      onChange={(e) => setSearchTerm(e.target.value)}
+    />
 
-            {loading ? (
-              <p>Loading items...</p>
-            ) : (
-              <div className="listings-grid">
-                {items.length === 0 ? (
-                  <p>No items available for leasing.</p>
-                ) : (
-                  items.map((item) => (
-                    <div key={item.id} className="item-card">
-                      <h4>{item.title}</h4>
-                      <p>{item.category || "Uncategorized"}</p>
-                      <p>KES {item.price_per_day} /day</p>
-                      {item.image ? (
-                        <img
-                          src={`data:image/jpeg;base64,${btoa(
-                            new Uint8Array(item.image.data).reduce(
-                              (data, byte) => data + String.fromCharCode(byte),
-                              ""
-                            )
-                          )}`}
-                          alt="Item"
-                          className="item-image"
-                        />
-                      ) : (
-                        <p style={{ color: "#888" }}>No image</p>
-                      )}
+    {showForm && <ListItem onSuccess={() => setShowForm(false)} />}
 
-                      <button className="lease-btn" onClick={() => handleRent(item)}>
-                        Rent Item
-                      </button>
-                    </div>
-                  ))
-                )}
-              </div>
-            )}
-          </>
+    {loading ? (
+      <p>Loading items...</p>
+    ) : (
+      <div className="listings-grid">
+        {filteredItems.length === 0 ? (
+          <p>No items match your search.</p>
+        ) : (
+          filteredItems.map((item) => (
+            <div key={item.id} className="item-card">
+              <h4>{item.title}</h4>
+              <p>{item.category || "Uncategorized"}</p>
+              <p>KES {item.price_per_day} /day</p>
+              {item.image ? (
+                <img
+                  src={`data:image/jpeg;base64,${btoa(
+                    new Uint8Array(item.image.data).reduce(
+                      (data, byte) => data + String.fromCharCode(byte),
+                      ""
+                    )
+                  )}`}
+                  alt="Item"
+                  className="item-image"
+                />
+              ) : (
+                <p style={{ color: "#888" }}>No image</p>
+              )}
+
+              <button className="lease-btn" onClick={() => handleRent(item)}>
+                Rent Item
+              </button>
+            </div>
+          ))
         )}
+      </div>
+    )}
+  </>
+)}
+
 
         {view === "requests" && (
           <>
@@ -142,27 +161,29 @@
               <p>No item requests found.</p>
             ) : (
               <table className="requests-table">
-                <thead>
-                  <tr>
-                    <th>Title</th>
-                    <th>Description</th>
-                    <th>Category</th>
-                    <th>Urgency</th>
-                    <th>Requested On</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {requests.map((req) => (
-                    <tr key={req.id}>
-                      <td>{req.title}</td>
-                      <td>{req.description}</td>
-                      <td>{req.category}</td>
-                      <td>{req.urgency}</td>
-                      <td>{new Date(req.created_at).toLocaleDateString()}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+  <thead>
+    <tr>
+
+      <th>Title</th>
+      <th>Description</th>
+      <th>Category</th>
+      <th>Urgency</th>
+      <th>Requested On</th>
+    </tr>
+  </thead>
+  <tbody>
+    {requests.map((req) => (
+      <tr key={req.id}>
+        <td>{req.title}</td>
+        <td>{req.description || "—"}</td>
+        <td>{req.category || "—"}</td>
+        <td className={`urgency-${req.urgency}`}>{req.urgency}</td>
+        <td>{new Date(req.created_at).toLocaleDateString()}</td>
+      </tr>
+    ))}
+  </tbody>
+</table>
+
             )}
           </>
         )}

@@ -7,6 +7,7 @@ import DeleteUserForm from "./DeleteUserForm";
 import ManageItems from "./ManageItems";
 import AnalyticsPanel from "./AnalyticsPanel";
 import AdminRequests from "./AdminRequests"; // <-- NEW
+import AdminRefunds from "./AdminRefunds";
 import "./AdminDashboards.css";
 
 const AdminDashboard = () => {
@@ -54,6 +55,9 @@ const AdminDashboard = () => {
         return <AnalyticsPanel stats={stats} />;
       case "requests":
         return <AdminRequests/>; // <-- NEW
+        case "refunds":
+  return <AdminRefunds />;
+
       default:
         return <ApproveStudents />;
     }
@@ -91,6 +95,9 @@ const AdminDashboard = () => {
             onClick={() => setActiveTab("analytics")}>
             📊 Analytics
           </button>
+<button className={activeTab === "refunds" ? "active" : ""} onClick={() => setActiveTab("refunds")}>
+  💸 Refunds
+</button>
 
            <button className="logout" onClick={handleLogout}>
           ← Logout

@@ -127,6 +127,7 @@ const Requests = () => {
                 <th>Category</th>
                 <th>Price</th>
                 <th>Urgency</th>
+                <th>Request Date</th>
                 <th>Action</th>
               </tr>
             </thead>
@@ -138,7 +139,7 @@ const Requests = () => {
                   <td>{request.category}</td>
                   <td>{request.desired_price ? `KES ${request.desired_price}` : '-'}</td>
                   <td className={`urgency-${request.urgency}`}>{request.urgency}</td>
-                  <td>{request.request_date}</td>
+                  <td>{new Date(request.request_date).toLocaleDateString()}</td>
                   <td>
                     <button className="delete-btn" onClick={() => handleDelete(request.id)}>Delete</button>
                   </td>

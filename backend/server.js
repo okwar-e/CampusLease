@@ -326,48 +326,57 @@ app.post("/items", upload.single("image"), async (req, res) => {
 
 
   app.get("/student/leases", async (req, res) => {
-    if (!req.session.user || req.session.user.role !== 'student') {
-      return res.status(401).json({ error: "Unauthorized" });
-    }
+  if (!req.session.user || req.session.user.role !== 'student') {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
 
-    try {
-      const [leases] = await pool.query(`
-        SELECT l.*, i.title AS item_title, i.price_per_day
-  FROM leases l
-  JOIN items i ON l.item_id = i.id
-  WHERE l.renter_id = ?
+  try {
+    const [leases] = await pool.query(`
+      SELECT 
+        l.*, 
+        i.title AS item_title, 
+        i.price_per_day,
+        u.full_name AS owner_name,
+        u.phone AS owner_phone
+      FROM leases l
+      JOIN items i ON l.item_id = i.id
+      JOIN users u ON i.owner_id = u.id
+      WHERE l.renter_id = ?
+    `, [req.session.user.id]);
 
-      `, [req.session.user.id]);
+    res.json(leases);
+  } catch (err) {
+    console.error("Error fetching leases:", err);
+    res.status(500).json({ error: "Failed to fetch leases" });
+  }
+});
 
-      res.json(leases);
-    } catch (err) {
-      console.error("Error fetching leases:", err);
-      res.status(500).json({ error: "Failed to fetch leases" });
-    }
-  });
 
   // GET /student/lent
-  app.get("/student/lent", async (req, res) => {
-    if (!req.session.user) return res.status(401).json({ error: "Not logged in" });
+app.get("/student/lent", async (req, res) => {
+  if (!req.session.user || req.session.user.role !== 'student') {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
 
-    const userId = req.session.user.id;
+  try {
+    const [rows] = await pool.query(`
+      SELECT 
+        l.*,
+        i.title AS item_title,
+        u.full_name AS renter_name,
+        u.phone AS renter_phone
+      FROM leases l
+      JOIN items i ON l.item_id = i.id
+      JOIN users u ON l.renter_id = u.id
+      WHERE i.owner_id = ?
+    `, [req.session.user.id]);
 
-    try {
-      const [rows] = await pool.query(`
-        SELECT l.*, u.full_name AS renter_name, i.title AS item_title, i.price_per_day
-        FROM leases l
-        JOIN items i ON l.item_id = i.id
-        JOIN users u ON l.renter_id = u.id
-        WHERE i.owner_id = ?
-        ORDER BY l.created_at DESC
-      `, [userId]);
-
-      res.json(rows);
-    } catch (err) {
-      console.error("Error fetching lent items:", err);
-      res.status(500).json({ error: "Failed to fetch lent items" });
-    }
-  });
+    res.json(rows);
+  } catch (err) {
+    console.error("Error fetching lent items:", err);
+    res.status(500).json({ error: "Failed to fetch lent items." });
+  }
+});
 
 
 
@@ -416,127 +425,144 @@ app.get("/items/:id", async (req, res) => {
 const { stkPush } = require('./mpesa'); // 👈 Import only
 require('dotenv').config();
 
-app.use(cors({ origin: 'http://localhost:3000', credentials: true }));
+app.use(cors({
+  origin: 'http://localhost:3000',
+  credentials: true,
+}));
+
 app.use(express.json());
+
 app.use(session({
-  secret: 'campuslease-secret',
+  secret: process.env.SESSION_SECRET || 'fallback-secret', // ✅ Load from .env
   resave: false,
-  saveUninitialized: true
+  saveUninitialized: false, // 🔒 Better for privacy/security
+  cookie: {
+    httpOnly: true,
+    secure: false, // 🔁 Set to true if using HTTPS in production
+    maxAge: 1000 * 60 * 60 * 24, // 1 day
+  },
 }));
 
 // /pay/lease
+
 app.post("/pay/lease", express.json(), async (req, res) => {
   const user = req.session.user;
-  if (!user || user.role !== 'student') {
-    return res.status(403).json({ error: "Unauthorized" });
+
+  if (!user || user.role !== "student") {
+    return res.status(401).json({ error: "Unauthorized access" });
   }
 
-  const { item_id, start_date, end_date, total_price, phone } = req.body;
+  const { item_id, start_date, end_date, total_price } = req.body;
 
-  // ✅ Normalize dates
- // ✅ Normalize and validate dates
-try {
-  const todayStr = new Date().toISOString().split("T")[0]; // "YYYY-MM-DD"
-  const startDateStr = req.body.start_date;
-
-  if (!startDateStr) {
-    return res.status(400).json({ error: "Start date is required." });
+  if (!item_id || !start_date || !end_date || !total_price) {
+    return res.status(400).json({ error: "Missing required fields" });
   }
-
-  if (startDateStr < todayStr) {
-    return res.status(400).json({
-      error: "Start date cannot be in the past. Please select today or a future date."
-    });
-  }
-} catch (e) {
-  console.error("Date parsing error:", e);
-  return res.status(400).json({ error: "Date parsing failed." });
-}
-
 
   const conn = await pool.getConnection();
-  try {
-    await conn.beginTransaction();
+  await conn.beginTransaction();
 
-    // 1. Check item availability (lock to avoid race conditions)
+  try {
+    // 🔍 Get item details
     const [[item]] = await conn.query(
-      "SELECT owner_id, availability FROM items WHERE id = ? FOR UPDATE",
+      "SELECT * FROM items WHERE id = ? AND availability = 1",
       [item_id]
     );
 
     if (!item) {
-      return res.status(404).json({ error: "Item not found" });
+      throw new Error("Item not found or unavailable");
     }
 
-    if (item.availability !== 1) {
-      return res.status(400).json({ error: "Item is not available" });
+    const price = parseFloat(total_price);
+    const renterId = user.id;
+    const ownerId = item.owner_id;
+
+    if (ownerId === renterId) {
+      throw new Error("You cannot rent your own item");
     }
 
-    if (item.owner_id === user.id) {
-      return res.status(400).json({ error: "Cannot rent your own item" });
-    }
-
-    // 2. Create lease
-    const [leaseResult] = await conn.query(
-      `INSERT INTO leases (item_id, renter_id, start_date, end_date, total_price, status)
-       VALUES (?, ?, ?, ?, ?, 'pending')`,
-      [item_id, user.id, start_date, end_date, total_price]
+    // 💸 Check renter's wallet balance
+    const [[renterWallet]] = await conn.query(
+      "SELECT balance FROM wallets WHERE user_id = ?",
+      [renterId]
     );
 
-    const lease_id = leaseResult.insertId;
+    if (!renterWallet || renterWallet.balance < price) {
+      throw new Error("Insufficient balance in wallet");
+    }
 
-    // 3. Trigger M-Pesa STK Push
-    const mpesaRes = await stkPush({
-      phone,
-      amount: total_price,
-      accountReference: "CampusLease",
-      transactionDesc: `Lease ${lease_id}`
-    });
-
-    // 4. Insert payment record
+    // 🔻 Deduct from renter
     await conn.query(
-      `INSERT INTO payments 
-       (lease_id, lender_id, leaser_id, amount, phone, status, checkout_request_id)
-       VALUES (?, ?, ?, ?, ?, 'PENDING', ?)`,
-      [lease_id, item.owner_id, user.id, total_price, phone, mpesaRes.CheckoutRequestID]
+      "UPDATE wallets SET balance = balance - ? WHERE user_id = ?",
+      [price, renterId]
+    );
+
+    // 🔺 Credit to owner
+    await conn.query(
+      `INSERT INTO wallets (user_id, balance)
+       VALUES (?, ?)
+       ON DUPLICATE KEY UPDATE balance = balance + ?`,
+      [ownerId, price, price]
+    );
+
+    // 📝 Create lease
+    const [leaseResult] = await conn.query(
+      `INSERT INTO leases (item_id, renter_id, start_date, end_date, total_price, status)
+       VALUES (?, ?, ?, ?, ?, 'approved')`,
+      [item_id, renterId, start_date, end_date, price]
+    );
+    const leaseId = leaseResult.insertId;
+
+    // 💳 Record payment
+    await conn.query(
+      `INSERT INTO payments (lease_id, lender_id, leaser_id, amount)
+       VALUES (?, ?, ?, ?)`,
+      [leaseId, ownerId, renterId, price]
+    );
+
+    // 🚫 Mark item unavailable
+    await conn.query(
+      "UPDATE items SET availability = 0 WHERE id = ?",
+      [item_id]
     );
 
     await conn.commit();
-
-    res.json({
-      success: true,
-      message: "Lease created. Awaiting payment confirmation.",
-      lease_id,
-      checkoutRequestId: mpesaRes.CheckoutRequestID
-    });
+    res.json({ success: true, message: "Lease created, wallet updated, and payment recorded." });
 
   } catch (err) {
     await conn.rollback();
-    console.error("❌ Lease/payment error:", err);
-    res.status(500).json({ error: "Lease/payment failed" });
+    console.error("❌ Lease wallet error:", err.message);
+    res.status(500).json({ error: err.message || "Transaction failed" });
   } finally {
     conn.release();
   }
 });
-// /mpesa/callback
+
+
+
 app.post("/mpesa/callback", express.json(), async (req, res) => {
   const callback = req.body;
   console.log("📦 Callback received:", JSON.stringify(callback, null, 2));
 
   try {
     const stkCallback = callback?.Body?.stkCallback;
-    if (!stkCallback) return res.status(400).json({ error: "Invalid callback structure" });
-
-    const resultCode = stkCallback.ResultCode;
-    const checkoutRequestID = stkCallback.CheckoutRequestID;
-    const metadata = stkCallback?.CallbackMetadata?.Item;
-
-    if (resultCode === 0 && !metadata) {
-      return res.status(400).json({ error: "Missing metadata" });
+    if (!stkCallback) {
+      return res.status(400).json({ error: "Invalid callback structure" });
     }
 
-    let amount, phone, mpesaReceipt;
-    metadata?.forEach(item => {
+    const resultCode = stkCallback.ResultCode;
+    const checkoutRequestId = stkCallback.CheckoutRequestID;
+
+    if (!checkoutRequestId) {
+      return res.status(400).json({ error: "Missing CheckoutRequestID" });
+    }
+
+    const metadata = stkCallback.CallbackMetadata?.Item || [];
+
+    let amount = null;
+    let phone = null;
+    let mpesaReceipt = null;
+
+    metadata.forEach((item) => {
       if (item.Name === "Amount") amount = item.Value;
       if (item.Name === "PhoneNumber") phone = item.Value;
       if (item.Name === "MpesaReceiptNumber") mpesaReceipt = item.Value;
@@ -546,58 +572,49 @@ app.post("/mpesa/callback", express.json(), async (req, res) => {
     await conn.beginTransaction();
 
     try {
-      if (resultCode === 0) {
-        // Step 1: Update payment record
-        const [paymentUpdate] = await conn.query(`
-          UPDATE payments 
-          SET 
-            status = 'SUCCESS',
-            mpesa_receipt_no = ?,
-            transaction_time = NOW(),
-            amount = ?,
-            phone = ?
-          WHERE checkout_request_id = ?
-        `, [mpesaReceipt, amount, phone, checkoutRequestID]);
-
-        if (paymentUpdate.affectedRows === 0) {
-          throw new Error("Payment record not found or already updated");
-        }
-
-        // Step 2: Get lease_id
-        const [[payment]] = await conn.query(
-          `SELECT lease_id FROM payments WHERE checkout_request_id = ?`,
-          [checkoutRequestID]
-        );
-
-        // Step 3: Update lease
-        await conn.query(`UPDATE leases SET status = 'approved' WHERE id = ?`, [payment.lease_id]);
-
-        // Step 4: Get item_id
-        const [[lease]] = await conn.query(`SELECT item_id FROM leases WHERE id = ?`, [payment.lease_id]);
-
-        // Step 5: Update item availability
-        await conn.query(`UPDATE items SET availability = 0 WHERE id = ?`, [lease.item_id]);
-
-        await conn.commit();
-        console.log(`✅ Payment ${mpesaReceipt} processed and lease ${payment.lease_id} approved.`);
-
-      } else {
-        // Payment failed
+      if (resultCode !== 0) {
+        // ❌ Payment failed → mark transaction as FAILED
         await conn.query(`
-          UPDATE payments 
-          SET status = 'FAILED', transaction_time = NOW() 
+          UPDATE wallet_transactions
+          SET status = 'FAILED'
           WHERE checkout_request_id = ?
-        `, [checkoutRequestID]);
+        `, [checkoutRequestId]);
 
         await conn.commit();
-        console.warn(`⚠️ Payment failed for CheckoutRequestID: ${checkoutRequestID}`);
+        return res.status(200).json({ message: "Transaction failed. Marked as FAILED." });
       }
 
-      res.status(200).json({ message: "Callback handled successfully" });
+      // ✅ Payment success — find transaction and user
+      const [[tx]] = await conn.query(`
+        SELECT * FROM wallet_transactions
+        WHERE checkout_request_id = ?
+      `, [checkoutRequestId]);
+
+      if (!tx) throw new Error("Transaction not found.");
+
+      // ✅ Update transaction row with receipt and status
+      await conn.query(`
+        UPDATE wallet_transactions
+        SET status = 'SUCCESS',
+            mpesa_receipt = ?,
+            phone = ?
+        WHERE id = ?
+      `, [mpesaReceipt, phone, tx.id]);
+
+      // ✅ Credit the user's wallet
+      await conn.query(`
+        INSERT INTO wallets (user_id, balance)
+        VALUES (?, ?)
+        ON DUPLICATE KEY UPDATE balance = balance + ?
+      `, [tx.user_id, tx.amount, tx.amount]);
+
+      await conn.commit();
+      console.log(`✅ Wallet updated: User ${tx.user_id}, Amount: KES ${tx.amount}`);
+      res.status(200).json({ message: "Wallet top-up successful" });
 
     } catch (err) {
       await conn.rollback();
-      console.error("❌ Transaction failed:", err);
+      console.error("❌ Transaction processing error:", err);
       res.status(500).json({ error: "Callback processing failed" });
     } finally {
       conn.release();
@@ -610,49 +627,34 @@ app.post("/mpesa/callback", express.json(), async (req, res) => {
 });
 
 
-
 // Add this to your existing backend (likely in index.js or routes.js)
 
-// GET /student/payments - Get all payment records for logged-in student
 app.get("/student/payments", async (req, res) => {
-  if (!req.session.user || req.session.user.role !== 'student') {
-    return res.status(401).json({ error: "Unauthorized" });
+  const user = req.session.user;
+  if (!user || user.role !== "student") {
+    return res.status(401).json({ error: "Unauthorized access" });
   }
 
   try {
-    const [payments] = await pool.query(`
+    const [rows] = await pool.query(`
       SELECT 
         p.id,
         p.amount,
-        p.status,
-        p.transaction_time AS payment_date,
-        p.mpesa_receipt_no,
+        p.transaction_time,
+        i.title AS item_title,
         l.start_date,
-        l.end_date,
-        i.title AS item_title
-      FROM 
-        payments p
-      JOIN 
-        leases l ON p.lease_id = l.id
-      JOIN 
-        items i ON l.item_id = i.id
-      WHERE 
-        p.leaser_id = ?
-      ORDER BY 
-        p.transaction_time DESC
-    `, [req.session.user.id]);
+        l.end_date
+      FROM payments p
+      JOIN leases l ON p.lease_id = l.id
+      JOIN items i ON l.item_id = i.id
+      WHERE p.leaser_id = ?
+      ORDER BY p.transaction_time DESC
+    `, [user.id]);
 
-    // Format dates and amounts for frontend
-    const formattedPayments = payments.map(payment => ({
-      ...payment,
-      payment_date: payment.payment_date || null, // Handle NULL dates
-      amount: parseFloat(payment.amount).toFixed(2) // Ensure 2 decimal places
-    }));
-
-    res.status(200).json(formattedPayments);
+    res.json(rows);
   } catch (err) {
-    console.error("Error fetching payments:", err);
-    res.status(500).json({ error: "Failed to fetch payment records" });
+    console.error("❌ Failed to fetch payments:", err);
+    res.status(500).json({ error: "Failed to fetch payment history." });
   }
 });
 
@@ -670,6 +672,7 @@ app.get("/student/profile", async (req, res) => {
         full_name,
         school_email,
         status,
+        phone,               -- ✅ must be here
         selfie,
         id_card
       FROM users
@@ -682,10 +685,12 @@ app.get("/student/profile", async (req, res) => {
 
     const profile = rows[0];
 
-    // Convert BLOBs to base64
+    console.log("📦 Loaded profile:", profile); // ✅ Add this for debugging
+
     const formattedProfile = {
       full_name: profile.full_name,
       school_email: profile.school_email,
+      phone: profile.phone || "", // ✅ Include phone
       status: profile.status,
       selfie: profile.selfie ? profile.selfie.toString('base64') : null,
       id_card: profile.id_card ? profile.id_card.toString('base64') : null,
@@ -697,6 +702,8 @@ app.get("/student/profile", async (req, res) => {
     res.status(500).json({ error: "Failed to fetch profile data" });
   }
 });
+
+
 
 
 
@@ -730,6 +737,8 @@ app.get('/admin/items', async (req, res) => {
     res.status(500).json({ error: 'Failed to load items' });
   }
 });
+
+
 // DELETE /admin/items/:id
 app.delete('/admin/items/:id', async (req, res) => {
   try {
@@ -743,7 +752,24 @@ app.delete('/admin/items/:id', async (req, res) => {
 });
 
 
+
 // --- ITEM REQUEST ROUTES ---
+app.get('/requests/all', async (req, res) => {
+  try {
+    const [rows] = await pool.query(`
+      SELECT r.id, r.item_name AS title, r.description, r.category, r.urgency, r.created_at, u.full_name, u.phone
+      FROM item_requests r
+      JOIN users u ON r.student_id = u.id
+      ORDER BY r.created_at DESC
+    `);
+
+    res.json(rows);
+  } catch (err) {
+    console.error("Error fetching all requests:", err);
+    res.status(500).json({ error: "Failed to fetch requests" });
+  }
+});
+
 
 app.post("/student/requests", async (req, res) => {
  if (!req.session.user) {
@@ -818,7 +844,6 @@ app.delete("/student/requests/:id", async (req, res) => {
     res.status(500).json({ error: "Failed to delete request" });
   }
 });
-
 app.put("/student/profile", upload.fields([
   { name: 'selfie' },
   { name: 'id_card' }
@@ -830,19 +855,49 @@ app.put("/student/profile", upload.fields([
 
   const { full_name, phone } = req.body;
 
-
   try {
+    const updates = [];
+    const params = [];
+
+    if (full_name) {
+      updates.push("full_name = ?");
+      params.push(full_name);
+    }
+
+    if (phone) {
+      updates.push("phone = ?");
+      params.push(phone); // ✅ Corrected from `phone_number` to `phone`
+    }
+
+    // Handle file updates
+    if (req.files?.selfie?.[0]) {
+      updates.push("selfie = ?");
+      params.push(req.files.selfie[0].buffer);
+    }
+
+    if (req.files?.id_card?.[0]) {
+      updates.push("id_card = ?");
+      params.push(req.files.id_card[0].buffer);
+    }
+
+    if (updates.length === 0) {
+      return res.status(400).json({ error: "Nothing to update." });
+    }
+
+    params.push(user.id);
+
     await pool.query(
-      `UPDATE users SET full_name = ?, phone_number = ?
-       WHERE id = ?`,
-      [full_name, phone, user.id]
+      `UPDATE users SET ${updates.join(", ")} WHERE id = ?`,
+      params
     );
+
     res.json({ message: "Profile updated" });
   } catch (err) {
     console.error("Update error:", err);
     res.status(500).json({ error: "Failed to update profile" });
   }
 });
+
 
 // ✅ Get all requests (admin only)
 app.get('/admin/requests', async (req, res) => {
@@ -888,53 +943,244 @@ app.delete('/admin/requests/:id', async (req, res) => {
 
 app.get('/admin/stats', async (req, res) => {
   const user = req.session.user;
+
   if (!user || user.role !== 'admin') {
     return res.status(403).json({ error: 'Unauthorized' });
   }
 
   try {
-    // Pending students
-    const [[{ pendingUsers }]] = await pool.query(`SELECT COUNT(*) AS pendingUsers FROM users WHERE status = 'pending'`);
-
-    // Total items
-    const [[{ totalItems }]] = await pool.query(`SELECT COUNT(*) AS totalItems FROM items`);
-
-    // Total revenue
-    const [[{ totalRevenue }]] = await pool.query(`SELECT SUM(amount) AS totalRevenue FROM payments WHERE status = 'SUCCESS'`);
-
-    // Weekly revenue (last 7 days)
-    const [[{ weeklyRevenue }]] = await pool.query(`
-      SELECT SUM(amount) AS weeklyRevenue 
-      FROM payments 
-      WHERE status = 'SUCCESS' 
-        AND transaction_time >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+    const [[{ pendingUsers }]] = await pool.query(`
+      SELECT COUNT(*) AS pendingUsers FROM users WHERE status = 'pending'
     `);
 
-    // Daily revenue for the graph (last 7 days)
+    const [[{ totalItems }]] = await pool.query(`
+  SELECT COUNT(*) AS totalItems FROM items WHERE availability = 1
+`);
+
+    const [[{ totalRevenue }]] = await pool.query(`
+      SELECT SUM(amount) AS totalRevenue FROM payments
+    `);
+
+    const [[{ weeklyRevenue }]] = await pool.query(`
+      SELECT SUM(amount) AS weeklyRevenue
+      FROM payments
+      WHERE transaction_time >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+    `);
+
     const [dailyRevenue] = await pool.query(`
       SELECT 
         DATE(transaction_time) AS date, 
-        SUM(amount) AS amount 
-      FROM payments 
-      WHERE status = 'SUCCESS' 
-        AND transaction_time >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+        SUM(amount) AS amount
+      FROM payments
+      WHERE transaction_time >= DATE_SUB(NOW(), INTERVAL 7 DAY)
       GROUP BY DATE(transaction_time)
       ORDER BY DATE(transaction_time)
     `);
 
     res.json({
-      pendingUsers,
-      totalItems,
-      totalRevenue,
-      weeklyRevenue,
-      dailyRevenue
+      pendingUsers: pendingUsers || 0,
+      totalItems: totalItems || 0,
+      totalRevenue: totalRevenue || 0,
+      weeklyRevenue: weeklyRevenue || 0,
+      dailyRevenue: dailyRevenue || []
     });
 
   } catch (err) {
-    console.error('Analytics error:', err);
+    console.error('Admin Stats Error:', err);
     res.status(500).json({ error: 'Failed to fetch analytics' });
   }
 });
+
+
+
+
+app.use((req, res, next) => {
+  res.setHeader("Cache-Control", "no-store"); // Prevent caching
+  next();
+});
+
+app.post('/logout', (req, res) => {
+  req.session.destroy(err => {
+    if (err) {
+      return res.status(500).json({ message: "Logout failed" });
+    }
+    res.clearCookie("connect.sid"); // Replace with your session cookie name if different
+    res.json({ message: "Logged out" });
+  });
+});
+app.get("/wallet/balance", async (req, res) => {
+  const user = req.session.user;
+
+  // 🔒 Check if user is logged in and is a student
+  if (!user || user.role !== 'student') {
+    return res.status(401).json({ error: "Unauthorized access" });
+  }
+
+  try {
+    // ✅ Check for wallet
+    const [[wallet]] = await pool.query(
+      "SELECT balance FROM wallets WHERE user_id = ?",
+      [user.id]
+    );
+
+    // ❌ Wallet not found — create with 0.00 balance
+    if (!wallet) {
+      await pool.query(
+        "INSERT INTO wallets (user_id, balance) VALUES (?, 0.00)",
+        [user.id]
+      );
+      return res.json({ balance: 0.00 });
+    }
+
+    // ✅ Return current balance
+    const balance = wallet.balance !== null ? parseFloat(wallet.balance) : 0.00;
+    res.json({ balance });
+    
+  } catch (err) {
+    console.error("❌ Error fetching wallet balance:", err);
+    res.status(500).json({ error: "Failed to fetch wallet balance" });
+  }
+});
+app.post("/wallet/deposit", async (req, res) => {
+  const user = req.session.user;
+  if (!user) return res.status(403).json({ error: "Unauthorized" });
+
+  const { amount, phone } = req.body;
+
+  // ✅ Validate amount
+  if (!amount || amount <= 0) {
+    return res.status(400).json({ error: "Invalid amount" });
+  }
+
+  // ✅ Validate Safaricom phone number (must start with 2547...)
+  if (!/^2547\d{8}$/.test(phone)) {
+    return res.status(400).json({ error: "Invalid Safaricom phone number" });
+  }
+
+  try {
+    // ✅ 1. Trigger STK Push
+    const mpesaRes = await stkPush({
+      phone,
+      amount,
+      accountReference: "CampusLease",
+      transactionDesc: `Wallet top-up for ${user.full_name}`
+    });
+
+    // ✅ 2. Log full response for debugging
+    console.log("📲 STK Push response:", JSON.stringify(mpesaRes, null, 2));
+
+    const checkoutRequestId = mpesaRes.CheckoutRequestID;
+
+    if (!checkoutRequestId) {
+      throw new Error("Invalid STK response — CheckoutRequestID missing.");
+    }
+
+    // ✅ 3. Store transaction as pending in wallet_transactions
+    await pool.query(`
+      INSERT INTO wallet_transactions (user_id, amount, phone, checkout_request_id, status)
+      VALUES (?, ?, ?, ?, 'PENDING')
+    `, [user.id, amount, phone, checkoutRequestId]);
+
+    // ✅ 4. Respond to frontend
+    res.json({
+      success: true,
+      message: "STK Push sent. Awaiting confirmation.",
+      checkoutRequestId
+    });
+
+  } catch (err) {
+    console.error("❌ Deposit error:", err);
+    res.status(500).json({ error: "Failed to initiate deposit" });
+  }
+});
+
+app.get("/admin/refund-requests", async (req, res) => {
+  try {
+    const [refunds] = await pool.query(`
+      SELECT r.*, u.full_name AS user_name, p.amount AS paid_amount, i.title AS item_title
+      FROM refunds r
+      JOIN payments p ON r.payment_id = p.id
+      JOIN leases l ON p.lease_id = l.id
+      JOIN items i ON l.item_id = i.id
+      JOIN users u ON r.user_id = u.id
+      WHERE r.approved_by IS NULL
+      ORDER BY r.refunded_at DESC
+    `);
+    res.json(refunds);
+  } catch (err) {
+    console.error("Failed to fetch refunds:", err);
+    res.status(500).json({ error: "Failed to fetch refund requests" });
+  }
+});
+
+app.post("/admin/refund/:id/approve", async (req, res) => {
+  const refundId = req.params.id;
+  const admin = req.session.user;
+  if (!admin || admin.role !== 'admin') {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+
+  const conn = await pool.getConnection();
+  await conn.beginTransaction();
+
+  try {
+    const [[refund]] = await conn.query("SELECT * FROM refunds WHERE id = ?", [refundId]);
+
+    if (!refund) throw new Error("Refund not found");
+    if (refund.approved_by) throw new Error("Refund already processed");
+
+    // credit user wallet
+    await conn.query("UPDATE wallets SET balance = balance + ? WHERE user_id = ?", [refund.amount, refund.user_id]);
+
+    // mark refund as approved
+    await conn.query("UPDATE refunds SET approved_by = ? WHERE id = ?", [admin.id, refundId]);
+
+    await conn.commit();
+    res.json({ success: true, message: "Refund approved" });
+  } catch (err) {
+    await conn.rollback();
+    console.error("Refund approval error:", err);
+    res.status(500).json({ error: err.message || "Refund failed" });
+  } finally {
+    conn.release();
+  }
+});
+
+app.post("/student/request-refund", express.json(), async (req, res) => {
+  const user = req.session.user;
+  const { payment_id, reason } = req.body;
+
+  if (!user || user.role !== "student") {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+
+  if (!payment_id || !reason) {
+    return res.status(400).json({ error: "Missing payment ID or reason" });
+  }
+
+  try {
+    // Check if already requested
+    const [existing] = await pool.query(
+      "SELECT * FROM refunds WHERE payment_id = ? AND user_id = ?",
+      [payment_id, user.id]
+    );
+
+    if (existing.length > 0) {
+      return res.status(400).json({ error: "Refund already requested" });
+    }
+
+    await pool.query(
+      "INSERT INTO refunds (payment_id, user_id, amount, reason) SELECT id, leaser_id, amount, ? FROM payments WHERE id = ? AND leaser_id = ?",
+      [reason, payment_id, user.id]
+    );
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error("Refund request error:", err);
+    res.status(500).json({ error: "Failed to request refund" });
+  }
+});
+
 
 
 // ✅ Start server

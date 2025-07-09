@@ -1,0 +1,107 @@
+/* payments.css */
+
+.payments-section {
+  max-width: 1000px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background-color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.07);
+}
+
+.payments-section h2 {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  color: #333;
+  font-size: 1.8rem;
+}
+
+/* Table Styling */
+.payments-section table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+  font-size: 0.95rem;
+}
+
+.payments-section th,
+.payments-section td {
+  padding: 12px 16px;
+  border-bottom: 1px solid #ddd;
+  text-align: left;
+}
+
+.payments-section th {
+  background-color: #f5f5f5;
+  font-weight: bold;
+  color: #444;
+}
+
+.payments-section tr:hover {
+  background-color: #f9f9f9;
+}
+
+/* Refund Button */
+.payments-section button {
+  padding: 6px 12px;
+  font-size: 0.85rem;
+  background-color: #ff4d4f;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.payments-section button:hover {
+  background-color: #d9363e;
+}
+
+/* Status Text */
+.payments-section td:nth-child(5) {
+  font-weight: bold;
+  color: #007b00;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .payments-section {
+    padding: 1rem;
+  }
+
+  .payments-section table,
+  .payments-section thead,
+  .payments-section tbody,
+  .payments-section th,
+  .payments-section td,
+  .payments-section tr {
+    display: block;
+  }
+
+  .payments-section tr {
+    margin-bottom: 1rem;
+    background-color: #fdfdfd;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    padding: 1rem;
+  }
+
+  .payments-section td {
+    padding: 0.5rem 0;
+    text-align: right;
+    position: relative;
+  }
+
+  .payments-section td::before {
+    content: attr(data-label);
+    position: absolute;
+    left: 0;
+    font-weight: bold;
+    text-transform: capitalize;
+    color: #666;
+  }
+
+  .payments-section th {
+    display: none;
+  }
+}
