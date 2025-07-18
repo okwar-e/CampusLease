@@ -16,18 +16,7 @@ const LandingPage = () => {
       <nav className="navbar">
         <div className="logo">🎓 CampusLease</div>
         <div className="nav-links">
-          <button 
-            className="nav-link" 
-            onClick={() => handleNavigation('/')}
-          >
-            About
-          </button>
-          <button 
-            className="nav-link" 
-            onClick={() => handleNavigation('/')}
-          >
-            Contact
-          </button>
+       
           <button 
             className="login-btn"
             onClick={() => handleNavigation('/login')}

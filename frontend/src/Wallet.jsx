@@ -29,10 +29,12 @@ function Wallet() {
       return;
     }
 
-    if (!phone.match(/^2547\d{8}$/)) {
-      setMessage("Please enter a valid Safaricom number (format: 2547XXXXXXXX).");
-      return;
-    }
+if (!phone.match(/^254(7|1)\d{8}$/)) {
+  setMessage("Please enter a valid Safaricom number (e.g. 2547XXXXXXXX or 2541XXXXXXXX).");
+  return;
+}
+
+
 
     try {
       setLoading(true);
@@ -59,37 +61,49 @@ function Wallet() {
     fetchBalance();
   }, []);
 
-  return (
-    <div className="wallet-container">
-      <h2>👛 Wallet</h2>
-      <p><strong>Balance:</strong> KES {balance.toFixed(2)}</p>
-
-      <input
-        type="number"
-        placeholder="Enter amount"
-        value={amount}
-        onChange={(e) => setAmount(e.target.value)}
-        disabled={loading}
-        min={10}
-      />
-
-      <input
-        type="tel"
-        placeholder="Enter phone (e.g. 254712345678)"
-        value={phone}
-        onChange={(e) => setPhone(e.target.value)}
-        disabled={loading}
-        pattern="2547\d{8}"
-        required
-      />
-
-      <button onClick={handleDeposit} disabled={loading}>
-        {loading ? "Processing..." : "Deposit via M-Pesa"}
-      </button>
-
-      {message && <p style={{ marginTop: '10px', color: 'blue' }}>{message}</p>}
+ return (
+  <div className="wallet-container">
+    <h2>👛 Wallet</h2>
+    <div className="balance-display">
+      <strong>Balance:</strong> KES {balance.toFixed(2)}
     </div>
-  );
+
+    <input
+      type="number"
+      placeholder="Enter amount (minimum KES 10)"
+      value={amount}
+      onChange={(e) => setAmount(e.target.value)}
+      disabled={loading}
+      min="10"
+    />
+
+    <input
+      type="tel"
+      placeholder="Enter Safaricom number (e.g. 254712345678)"
+      value={phone}
+      onChange={(e) => setPhone(e.target.value)}
+      disabled={loading}
+      pattern="254[71]\d{8}"
+    />
+
+    <button 
+      className="deposit-btn" 
+      onClick={handleDeposit} 
+      disabled={loading}
+    >
+      {loading ? "Processing..." : "Deposit via M-Pesa"}
+    </button>
+
+    {message && (
+      <div className={`message ${
+        message.includes("sent") ? "success" : 
+        message.includes("Error") || message.includes("Failed") ? "error" : "info"
+      }`}>
+        {message}
+      </div>
+    )}
+  </div>
+);
 }
 
 export default Wallet;

@@ -1,75 +1,185 @@
+/* leases.css */
+
+:root {
+  --primary-color: #4361ee;
+  --secondary-color: #3a0ca3;
+  --accent-color: #4895ef;
+  --light-color: #f8f9fa;
+  --dark-color: #212529;
+  --text-color: #2b2d42;
+  --border-color: #e0e4e8;
+  --success-color: #4cc9f0;
+  --warning-color: #f72585;
+  --error-color: #ef476f;
+  --card-bg: #ffffff;
+  --status-active: #06d6a0;
+  --status-pending: #ffd166;
+  --status-expired: #ef476f;
+}
+
 .leases-container {
-  max-width: 900px;
-  margin: auto;
-  padding: 2rem;
-  background-color: #fff;
-  border-radius: 12px;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+  padding: 1.5rem;
+  background-color: var(--light-color);
+  color: var(--text-color);
+  height: 100%;
+  overflow-y: auto;
 }
 
 .leases-container h2 {
-  text-align: center;
+  color: var(--primary-color);
+  font-size: 1.8rem;
   margin-bottom: 1.5rem;
-  color: #333;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
 }
 
+/* Table Styles */
 .leases-table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
+  background-color: var(--card-bg);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  margin-top: 1rem;
 }
 
-.leases-table th,
-.leases-table td {
-  padding: 12px 16px;
-  border-bottom: 1px solid #ddd;
-  text-align: left;
-  font-size: 0.95rem;
+.leases-table thead {
+  background-color: var(--primary-color);
+  color: white;
 }
 
 .leases-table th {
-  background-color: #f1f1f1;
-  font-weight: bold;
+  padding: 1rem 1.25rem;
+  text-align: left;
+  font-weight: 500;
+  font-size: 0.95rem;
+}
+
+.leases-table td {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border-color);
+  vertical-align: middle;
+}
+
+.leases-table tr:last-child td {
+  border-bottom: none;
 }
 
 .leases-table tr:hover {
-  background-color: #f9f9f9;
+  background-color: rgba(67, 97, 238, 0.05);
 }
 
-/* Responsive layout */
-@media (max-width: 768px) {
-  .leases-table,
-  .leases-table thead,
-  .leases-table tbody,
-  .leases-table th,
-  .leases-table td,
-  .leases-table tr {
-    display: block;
-  }
+/* Status Badges */
+.leases-table td[data-label="Status"] {
+  font-weight: 500;
+  text-transform: capitalize;
+}
 
+.leases-table td[data-label="Status"]:after {
+  content: '';
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-left: 8px;
+}
+
+.status-active {
+  color: var(--status-active);
+}
+
+.status-active:after {
+  background-color: var(--status-active);
+}
+
+.status-pending {
+  color: var(--status-pending);
+}
+
+.status-pending:after {
+  background-color: var(--status-pending);
+}
+
+.status-expired {
+  color: var(--status-expired);
+}
+
+.status-expired:after {
+  background-color: var(--status-expired);
+}
+
+/* Loading & Error States */
+.loading-message,
+.error-message,
+.empty-message {
+  padding: 2rem;
+  text-align: center;
+  border-radius: 12px;
+  background-color: var(--card-bg);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.error-message {
+  color: var(--error-color);
+  background-color: rgba(239, 71, 111, 0.1);
+}
+
+.empty-message {
+  color: #64748b;
+}
+
+/* Responsive Table */
+@media (max-width: 768px) {
+  .leases-table {
+    display: block;
+    border: 1px solid var(--border-color);
+  }
+  
   .leases-table thead {
     display: none;
   }
-
+  
   .leases-table tr {
-    margin-bottom: 1rem;
-    border: 1px solid #ddd;
-    border-radius: 10px;
+    display: block;
     padding: 1rem;
-    background-color: #fdfdfd;
+    border-bottom: 1px solid var(--border-color);
   }
-
+  
   .leases-table td {
-    text-align: right;
+    display: flex;
+    justify-content: space-between;
     padding: 0.5rem 0;
-    position: relative;
+    border-bottom: none;
   }
-
+  
   .leases-table td::before {
     content: attr(data-label);
-    position: absolute;
-    left: 0;
-    font-weight: bold;
-    text-transform: capitalize;
-    color: #666;
+    font-weight: 500;
+    color: var(--primary-color);
+    margin-right: 1rem;
   }
+  
+  .leases-table td:last-child {
+    padding-bottom: 0;
+  }
+  
+  .leases-table tr:last-child {
+    border-bottom: none;
+  }
+}
+
+/* Currency Formatting */
+.currency {
+  font-family: 'Courier New', monospace;
+  font-weight: 500;
+  color: var(--primary-color);
+}
+
+/* Phone Number Styling */
+.phone-number {
+  font-family: 'Courier New', monospace;
+  font-weight: 500;
 }

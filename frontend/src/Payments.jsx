@@ -67,34 +67,48 @@ const Payments = () => {
       ) : payments.length === 0 ? (
         <p>No payment records found.</p>
       ) : (
-        <table border="1" cellPadding="10">
-          <thead>
-            <tr>
-              <th>Item</th>
-              <th>Lease Period</th>
-              <th>Amount Paid</th>
-              <th>Payment Date</th>
-              <th>Refund</th>
-            </tr>
-          </thead>
-          <tbody>
-            {payments.map((p) => (
-              <tr key={p.id}>
-                <td>{p.item_title}</td>
-                <td>{formatDate(p.start_date)} - {formatDate(p.end_date)}</td>
-                <td>KES {p.amount}</td>
-                <td>{formatDate(p.transaction_time)}</td>
-                <td>
-                  {p.refunded ? (
-                    "✅ Refunded"
-                  ) : (
-                    <button onClick={() => requestRefund(p.id)}>Request Refund</button>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        // Update your table structure and cells:
+<table>
+  <thead>
+    <tr>
+      <th>Item</th>
+      <th>Lease Period</th>
+      <th>Amount Paid</th>
+      <th>Payment Date</th>
+      <th>Refund</th>
+    </tr>
+  </thead>
+  <tbody>
+    {payments.map((p) => (
+      <tr key={p.id}>
+        <td data-label="Item">{p.item_title}</td>
+        <td data-label="Lease Period">
+          <div className="date-range">
+            <span>{formatDate(p.start_date)}</span>
+            <span className="date-separator">to</span>
+            <span>{formatDate(p.end_date)}</span>
+          </div>
+        </td>
+        <td data-label="Amount Paid">KES {p.amount}</td>
+        <td data-label="Payment Date">{formatDate(p.transaction_time)}</td>
+        <td data-label="Refund">
+          {p.refunded ? (
+            <span className="refunded-status">
+              <span>✅</span> Refunded
+            </span>
+          ) : (
+            <button 
+              className="refund-btn"
+              onClick={() => requestRefund(p.id)}
+            >
+              Request Refund
+            </button>
+          )}
+        </td>
+      </tr>
+    ))}
+  </tbody>
+</table>
       )}
     </div>
   );

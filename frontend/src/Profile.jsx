@@ -75,8 +75,9 @@ const Profile = () => {
 
 
 
-          <button onClick={handleUpdate}>Save Changes</button>
-        </div>
+  <button className="save-button" onClick={handleUpdate}>
+          Save Changes
+        </button>        </div>
       ) : (
         <p>Loading profile...</p>
       )}

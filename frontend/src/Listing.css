@@ -1,163 +1,187 @@
-/* Layout and Container */
+/* Listing.css */
+
+:root {
+  --primary-color: #4361ee;       /* Vibrant blue */
+  --secondary-color: #3a0ca3;     /* Darker blue */
+  --accent-color: #4895ef;        /* Lighter blue */
+  --light-color: #f8f9fa;         /* Off-white */
+  --dark-color: #212529;          /* Dark gray */
+  --text-color: #2b2d42;          /* Dark blue-gray for text */
+  --border-color: #e0e4e8;        /* Light gray for borders */
+  --card-bg: #ffffff;             /* Pure white for cards */
+  --success-color: #4cc9f0;       /* Teal */
+  --warning-color: #f72585;       /* Pink */
+}
+
 .listings-container {
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 3rem 1.5rem;
-  font-family: 'Inter', sans-serif;
-  background-color: #f9f9f9;
-}
-
-/* Heading */
-.listings-heading {
-  text-align: center;
-  font-size: 1.75rem;
-  font-weight: 600;
-  color: #111827;
-  margin-bottom: 2rem;
-}
-
-/* View Toggle Buttons */
-.view-toggle {
+  padding: 1rem;
+  height: calc(100vh - 2rem);
   display: flex;
-  justify-content: center;
-  gap: 0.5rem;
-  margin-bottom: 1.5rem;
+  flex-direction: column;
+  background-color: var(--light-color);
+  color: var(--text-color);
+}
+
+.content-wrapper {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+}
+
+/* View Toggle */
+.view-toggle {
+  display: inline-flex;
+  background: rgba(67, 97, 238, 0.1);
+  border-radius: 50px;
+  padding: 0.25rem;
+  margin-bottom: 1rem;
+  border: 1px solid var(--border-color);
 }
 
 .view-toggle button {
-  padding: 0.6rem 1.25rem;
-  background-color: #e5e7eb;
+  padding: 0.5rem 1.5rem;
   border: none;
-  border-radius: 8px;
+  background: transparent;
+  color: var(--text-color);
   font-weight: 500;
-  color: #374151;
+  border-radius: 50px;
   cursor: pointer;
-  transition: background-color 0.3s ease, color 0.3s ease;
+  transition: all 0.3s ease;
 }
 
-.view-toggle button.active,
-.view-toggle button:hover {
-  background-color: #93c5fd;
-  color: #111827;
+.view-toggle button.active {
+  background: var(--primary-color);
+  color: white;
+  box-shadow: 0 2px 8px rgba(67, 97, 238, 0.3);
 }
 
-/* New Listing Button */
-.list-new-btn {
-  display: block;
-  margin: 0 auto 2rem auto;
-  padding: 0.75rem 1.5rem;
-  background-color: #93c5fd;
-  color: #111827;
-  border: none;
+/* Search Bar */
+.search-input {
+  width: 100%;
+  padding: 0.75rem 1rem 0.75rem 2.5rem;
+  border: 1px solid var(--border-color);
   border-radius: 8px;
-  font-weight: 600;
+  margin: 1rem 0;
+  background: white url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'%3E%3C/circle%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'%3E%3C/line%3E%3C/svg%3E") no-repeat 1rem center;
+  color: var(--text-color);
+}
+
+/* Buttons */
+.list-new-btn {
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
   cursor: pointer;
-  transition: background-color 0.3s ease;
+  font-weight: 500;
+  margin-bottom: 1rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 6px rgba(67, 97, 238, 0.2);
 }
 
 .list-new-btn:hover {
-  background-color: #60a5fa;
+  background: var(--secondary-color);
+  transform: translateY(-1px);
 }
 
-/* Grid for Item Cards */
-.listings-grid {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 24px;
-}
-
-/* Individual Item Card */
+/* Item Cards */
 .item-card {
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
+  background: var(--card-bg);
   border-radius: 12px;
-  padding: 1rem;
-  width: 240px;
-  text-align: center;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  padding: 1.25rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--border-color);
+  transition: all 0.3s ease;
 }
 
 .item-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+  border-color: var(--primary-color);
 }
 
-/* Item Image */
-.item-image {
-  width: 100%;
-  height: 160px;
-  object-fit: cover;
-  border-radius: 8px;
-  margin-bottom: 0.75rem;
-}
-
-/* Lease Button */
 .lease-btn {
-  margin-top: 0.75rem;
-  padding: 0.65rem;
-  background-color: #3b82f6;
-  color: #ffffff;
+  background: var(--primary-color);
+  color: white;
   border: none;
+  padding: 0.75rem;
   border-radius: 6px;
   cursor: pointer;
-  width: 100%;
-  font-weight: 600;
-  transition: background-color 0.2s ease;
+  font-weight: 500;
+  transition: all 0.3s ease;
 }
 
 .lease-btn:hover {
-  background-color: #2563eb;
+  background: var(--secondary-color);
 }
 
-/* Requests Section */
-.requests-heading {
-  margin-top: 3rem;
-  font-size: 1.5rem;
-  font-weight: 600;
-  text-align: center;
-  color: #111827;
-  margin-bottom: 1.5rem;
-}
-
-/* Requests Table */
+/* Table Styles */
 .requests-table {
   width: 100%;
-  border-collapse: collapse;
-  background: #ffffff;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: white;
   border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
-}
-
-.requests-table th,
-.requests-table td {
-  padding: 0.9rem 1.2rem;
-  border-bottom: 1px solid #f3f4f6;
-  text-align: left;
-  font-size: 0.95rem;
-  color: #374151;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
 .requests-table th {
-  background-color: #f1f5f9;
-  font-weight: 600;
-  color: #1f2937;
+  background: var(--primary-color);
+  color: white;
+  padding: 1rem;
+  text-align: left;
 }
 
-.requests-table tr:hover {
-  background-color: #f9fafb;
+.requests-table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border-color);
 }
-.urgency-low {
-  color: green;
-  font-weight: bold;
-}
-.urgency-medium {
-  color: orange;
-  font-weight: bold;
-}
+
+/* Urgency Indicators */
 .urgency-high {
-  color: red;
-  font-weight: bold;
+  color: #ef4444;
+  padding: 0.25rem 0.75rem;
+  display: inline-block;
+}
+
+.urgency-medium {
+  color: #f59e0b;
+  display: inline-block;
+}
+
+.urgency-low {
+  color: #10b981;
+  background: rgba(16, 185, 129, 0.1);
+  padding: 0.25rem 0.75rem;
+  display: inline-block;
+}
+
+/* Text Colors */
+.listings-heading {
+  color: var(--primary-color);
+}
+
+.item-card h4 {
+  color: var(--dark-color);
+}
+
+.item-card p {
+  color: var(--text-color);
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .listings-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .view-toggle {
+    width: 100%;
+  }
+  
+  .view-toggle button {
+    flex: 1;
+    text-align: center;
+  }
 }

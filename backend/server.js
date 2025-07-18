@@ -101,7 +101,7 @@ app.get("/verify-email", async (req, res) => {
 
   try {
     await pool.query(`
-      INSERT INTO users (full_name, school_email, phone_number, password_hash, selfie, id_card, status)
+      INSERT INTO users (full_name, school_email, phone, password_hash, selfie, id_card, status)
       VALUES (?, ?, ?, ?, ?, ?, 'pending')
     `, [
       data.full_name,
@@ -539,92 +539,58 @@ app.post("/pay/lease", express.json(), async (req, res) => {
 
 
 
-app.post("/mpesa/callback", express.json(), async (req, res) => {
-  const callback = req.body;
-  console.log("📦 Callback received:", JSON.stringify(callback, null, 2));
-
+app.post("/mpesa/callback", async (req, res) => {
   try {
-    const stkCallback = callback?.Body?.stkCallback;
-    if (!stkCallback) {
-      return res.status(400).json({ error: "Invalid callback structure" });
-    }
+    const stkCallback = req.body.Body.stkCallback;
+    const { CheckoutRequestID, ResultCode } = stkCallback;
 
-    const resultCode = stkCallback.ResultCode;
-    const checkoutRequestId = stkCallback.CheckoutRequestID;
+    if (ResultCode === 0) {
+      const metadata = stkCallback.CallbackMetadata?.Item || [];
 
-    if (!checkoutRequestId) {
-      return res.status(400).json({ error: "Missing CheckoutRequestID" });
-    }
+      const amount = metadata.find(i => i.Name === "Amount")?.Value;
+      const receipt = metadata.find(i => i.Name === "MpesaReceiptNumber")?.Value;
+      const transactionDate = metadata.find(i => i.Name === "TransactionDate")?.Value;
 
-    const metadata = stkCallback.CallbackMetadata?.Item || [];
+      const [rows] = await pool.query(
+        `SELECT * FROM wallet_transactions WHERE checkout_request_id = ?`,
+        [CheckoutRequestID]
+      );
 
-    let amount = null;
-    let phone = null;
-    let mpesaReceipt = null;
+      if (!rows.length) return res.status(404).send("Transaction not found");
 
-    metadata.forEach((item) => {
-      if (item.Name === "Amount") amount = item.Value;
-      if (item.Name === "PhoneNumber") phone = item.Value;
-      if (item.Name === "MpesaReceiptNumber") mpesaReceipt = item.Value;
-    });
+      const tx = rows[0];
 
-    const conn = await pool.getConnection();
-    await conn.beginTransaction();
+      // Avoid double credit
+      if (tx.status === 'completed') return res.status(200).send("Already processed");
 
-    try {
-      if (resultCode !== 0) {
-        // ❌ Payment failed → mark transaction as FAILED
-        await conn.query(`
-          UPDATE wallet_transactions
-          SET status = 'FAILED'
-          WHERE checkout_request_id = ?
-        `, [checkoutRequestId]);
-
-        await conn.commit();
-        return res.status(200).json({ message: "Transaction failed. Marked as FAILED." });
-      }
-
-      // ✅ Payment success — find transaction and user
-      const [[tx]] = await conn.query(`
-        SELECT * FROM wallet_transactions
+      // ✅ Update transaction status
+      await pool.query(`
+        UPDATE wallet_transactions 
+        SET mpesa_receipt = ?, transaction_date = ?, status = 'completed'
         WHERE checkout_request_id = ?
-      `, [checkoutRequestId]);
+      `, [receipt, transactionDate, CheckoutRequestID]);
 
-      if (!tx) throw new Error("Transaction not found.");
+      // ✅ Update wallet balance (wallets table)
+      await pool.query(`
+        UPDATE wallets SET balance = balance + ? WHERE user_id = ?
+      `, [amount, tx.user_id]);
 
-      // ✅ Update transaction row with receipt and status
-      await conn.query(`
-        UPDATE wallet_transactions
-        SET status = 'SUCCESS',
-            mpesa_receipt = ?,
-            phone = ?
-        WHERE id = ?
-      `, [mpesaReceipt, phone, tx.id]);
-
-      // ✅ Credit the user's wallet
-      await conn.query(`
-        INSERT INTO wallets (user_id, balance)
-        VALUES (?, ?)
-        ON DUPLICATE KEY UPDATE balance = balance + ?
-      `, [tx.user_id, tx.amount, tx.amount]);
-
-      await conn.commit();
-      console.log(`✅ Wallet updated: User ${tx.user_id}, Amount: KES ${tx.amount}`);
-      res.status(200).json({ message: "Wallet top-up successful" });
-
-    } catch (err) {
-      await conn.rollback();
-      console.error("❌ Transaction processing error:", err);
-      res.status(500).json({ error: "Callback processing failed" });
-    } finally {
-      conn.release();
+      console.log("✅ Wallet credited!");
     }
 
+    res.status(200).send("Callback processed");
   } catch (err) {
-    console.error("❌ Top-level callback error:", err);
-    res.status(500).json({ error: "Server error" });
+    console.error("❌ Callback error:", err);
+    res.status(500).send("Server error");
   }
 });
+
+
+
+
+
+
+
 
 
 // Add this to your existing backend (likely in index.js or routes.js)
@@ -754,21 +720,21 @@ app.delete('/admin/items/:id', async (req, res) => {
 
 
 // --- ITEM REQUEST ROUTES ---
-app.get('/requests/all', async (req, res) => {
-  try {
-    const [rows] = await pool.query(`
-      SELECT r.id, r.item_name AS title, r.description, r.category, r.urgency, r.created_at, u.full_name, u.phone
-      FROM item_requests r
-      JOIN users u ON r.student_id = u.id
-      ORDER BY r.created_at DESC
-    `);
+  app.get('/requests/all', async (req, res) => {
+    try {
+      const [rows] = await pool.query(`
+        SELECT r.id, r.item_name AS title, r.description, r.category, r.urgency, r.created_at, u.full_name, u.phone
+        FROM item_requests r
+        JOIN users u ON r.student_id = u.id
+        ORDER BY r.created_at DESC
+      `);
 
-    res.json(rows);
-  } catch (err) {
-    console.error("Error fetching all requests:", err);
-    res.status(500).json({ error: "Failed to fetch requests" });
-  }
-});
+      res.json(rows);
+    } catch (err) {
+      console.error("Error fetching all requests:", err);
+      res.status(500).json({ error: "Failed to fetch requests" });
+    }
+  });
 
 
 app.post("/student/requests", async (req, res) => {
@@ -1053,9 +1019,11 @@ app.post("/wallet/deposit", async (req, res) => {
   }
 
   // ✅ Validate Safaricom phone number (must start with 2547...)
-  if (!/^2547\d{8}$/.test(phone)) {
-    return res.status(400).json({ error: "Invalid Safaricom phone number" });
-  }
+if (!/^254(7|1)\d{8}$/.test(phone)) {
+  return res.status(400).json({ error: "Invalid phone number. Use format 2547XXXXXXXX or 2541XXXXXXXX." });
+}
+
+
 
   try {
     // ✅ 1. Trigger STK Push
@@ -1076,10 +1044,14 @@ app.post("/wallet/deposit", async (req, res) => {
     }
 
     // ✅ 3. Store transaction as pending in wallet_transactions
-    await pool.query(`
-      INSERT INTO wallet_transactions (user_id, amount, phone, checkout_request_id, status)
-      VALUES (?, ?, ?, ?, 'PENDING')
-    `, [user.id, amount, phone, checkoutRequestId]);
+   await pool.query(
+  `
+  INSERT INTO wallet_transactions (user_id, amount, phone, checkout_request_id)
+  VALUES (?, ?, ?, ?)
+`,
+  [user.id, amount, phone, checkoutRequestId]
+);
+;
 
     // ✅ 4. Respond to frontend
     res.json({

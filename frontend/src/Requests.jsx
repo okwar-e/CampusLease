@@ -134,7 +134,7 @@ const Requests = () => {
             <tbody>
               {requests.map((request) => (
                 <tr key={request.id}>
-                  <td>{request.item_name}</td>
+                  <td>{request.title}</td>
                   <td>{request.description}</td>
                   <td>{request.category}</td>
                   <td>{request.desired_price ? `KES ${request.desired_price}` : '-'}</td>
